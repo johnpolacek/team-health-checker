@@ -191,8 +191,8 @@ export default class extends React.Component {
     return <App>
       <Query query={HEALTHCHECK_QUERY} variables={{id: this.props.id}}>
         {({ loading, error, data }) => {
-          if (loading) return <div>Fetching...</div>
-          if (error) return <div>Error: Could not load HealthCheck with id: {this.props.id}</div>
+          if (loading) return <div>Loading...</div>
+          if (error || !data.HealthCheck) return <div>Error: Could not load HealthCheck with id: {this.props.id}</div>
           return (
             <h1>Loaded HealthCheck id: {this.props.id}</h1>
           )
@@ -276,6 +276,22 @@ Within the Mutation component, we have our button which has a new onClick functi
 
 After the id is set, we display the success message and a link to view the health check. We use the Next.js `Link` component to handle our client-side routing.
 
+Now we can use our HealthCheckCreator component and clean up `index.js` a bit.
+
+*index.js*
+
+~~~~
+import App from '../components/App'
+import HealthCheckCreator from '../components/HealthCheckCreator'
+
+export default () => (
+  <App>
+    <h1>Team Health Checker</h1>
+    <HealthCheckCreator />
+  </App>
+)
+~~~~
+
 Test it out and you after you click on the link, you should land on the health check page with the message indicating the load for that id was successful.
 
-Try out the failure state by changing the url to http://localhost:3000/healthcheck/123
+To see the failure state, go to `http://localhost:3000/healthcheck/123` and there should be an error message that the health check with id 123 could not be found.
