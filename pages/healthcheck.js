@@ -23,7 +23,6 @@ export default class extends React.Component {
         {({ loading, error, data }) => {
           if (loading) return <div>Fetching...</div>
           if (error) return <div>Error: Could not load HealthCheck with id: {this.props.id}</div>
-          console.log(data)
           return (
             <h1>Loaded HealthCheck id: {this.props.id}</h1>
           )
@@ -32,5 +31,3 @@ export default class extends React.Component {
     </App>
   }
 }
-
-// "cjrihdw8l00ha01092h7nloha"

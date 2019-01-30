@@ -19,6 +19,7 @@ init graphcool api
 
 Set up the schema in the types.grapql file. Our schema has 2 types, HealthChecks and the HealthCheckResponses for that HealthCheck. Each HealthCheckResponse has 11 individual questions that will get assigned an integer by the person responding to the health check.
 
+*api/types.grapql*
 ~~~~
 type HealthCheck @model {
   id: ID! @isUnique
@@ -57,6 +58,7 @@ Now, let’s get into the React code. Returning to the next.js example, we can s
 
 Open `index.js` and replace it with this:
 
+*pages/index.js*
 ~~~~
 import App from '../components/App'
 import { ApolloConsumer } from 'react-apollo'
@@ -141,6 +143,8 @@ Go to `http://localhost:3000/healthcheck/123` and you should see the id from the
 
 Next, we need to check that id from the url against the data in Graphcool. To do that, we’ll need to bring in some code from the previous page. Also, we will be doing a Query instead of a mutation, so change the react-apollo import to import that instead of Mutation.
 
+*pages/healthcheck.js*
+
 ~~~~
 import React from 'react'
 import App from '../components/App'
@@ -164,7 +168,9 @@ export default class extends React.Component {
 }
 ~~~~
 
-Now let’s add a query to check whether id from the url is a valid HealthCheck id.
+Now let’s add a query to check whether id from the url is a valid HealthCheck id. This time, rather than calleing the query method on the `ApolloClient` directly, we will use Apollo’s [render prop API](https://blog.apollographql.com/introducing-react-apollo-2-1-c837cc23d926) to manage the data with a Query component.
+
+*pages/healthcheck.js*
 
 ~~~~
 const HEALTHCHECK_QUERY = gql`query HealthCheck($id: ID!) {
@@ -187,7 +193,6 @@ export default class extends React.Component {
         {({ loading, error, data }) => {
           if (loading) return <div>Fetching...</div>
           if (error) return <div>Error: Could not load HealthCheck with id: {this.props.id}</div>
-          console.log(data)
           return (
             <h1>Loaded HealthCheck id: {this.props.id}</h1>
           )
@@ -198,4 +203,79 @@ export default class extends React.Component {
 }
 ~~~~
 
+As you can see, we define a query for the HealthCheck, and then in our Query component we handle the loading, error and success states.
 
+To get this working, we can update our create health check page to give us a link to the generated health check.
+
+Rather than putting more logic into the page, now is a good time to create a component that to handle the generation of a new health check.
+
+We are going to use React Hooks in this component, so we will need to install the latest version of React in our project (and might as well update the other dependencies while we are at it).
+
+*components/HealthCheckCreator.js*
+
+~~~~
+import { useState } from 'react';
+import { Mutation } from 'react-apollo'
+import gql from 'graphql-tag'
+import Link from 'next/link'
+
+const CREATEHEALTHCHECK_MUTATION = gql`
+  mutation createHealthCheck($responses: [HealthCheckresponsesHealthCheckResponse!]) {
+    createHealthCheck(responses: $responses) {
+      id
+    }
+  }
+`
+
+const HealthCheckCreator = (props) => {
+  const [id, setId] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  return (
+    <>
+      {
+        id ? (
+          <>
+            <p>You created a new Health Check!</p>
+            <Link href={'/healthcheck/'+id}>
+              <a>View health check</a>
+            </Link>
+          </>
+        ) : (
+          <Mutation 
+            mutation={CREATEHEALTHCHECK_MUTATION} 
+            onCompleted={(data) => {setId(data.createHealthCheck.id)}}
+          >
+            {createMutation => <button 
+                onClick={() => {
+                  setLoading(true)
+                  createMutation()
+                }}
+                children = {loading ? 'Loading...' : 'Create New Health Check'}
+              />
+            }
+          </Mutation>
+        )
+      }
+    </>
+  )
+}
+
+export default HealthCheckCreator
+~~~~
+
+Let’s go over what we are doing.
+
+As you can see, we are using React Hooks to manage the state for before/after an id is generated for a new health check, as well as the in-between loading state.
+
+We have switched to using a Mutation component rather than working directly with the Apollo client, but the GraphQL statement is the same and is passed to the Mutation component as a prop.
+
+Additionally, we have an onCompleted handler that will use our Hook to set the id to the one that comes from the Graphcool response data.
+
+Within the Mutation component, we have our button which has a new onClick function that initiates the mutation and sets loading to true.
+
+After the id is set, we display the success message and a link to view the health check. We use the Next.js `Link` component to handle our client-side routing.
+
+Test it out and you after you click on the link, you should land on the health check page with the message indicating the load for that id was successful.
+
+Try out the failure state by changing the url to http://localhost:3000/healthcheck/123
