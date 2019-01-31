@@ -227,7 +227,7 @@ const CREATEHEALTHCHECK_MUTATION = gql`
   }
 `
 
-const HealthCheckCreator = (props) => {
+const HealthCheckCreator = () => {
   const [id, setId] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -295,3 +295,85 @@ export default () => (
 Test it out and you after you click on the link, you should land on the health check page with the message indicating the load for that id was successful.
 
 To see the failure state, go to `http://localhost:3000/healthcheck/123` and there should be an error message that the health check with id 123 could not be found.
+
+##Part 3
+
+For the next part of developing this app, we will allow people to fill in the health check responses.
+
+We won’t worry about styling or a great user experience just yet, as this is just an exploratory proof-of-concept at this point.
+
+Let’s add a begin health check button, then display some UI that allows people to provide responses to each of the questions.
+
+*pages/healthcheck.js*
+
+~~~~
+<h1>Loaded HealthCheck id: {this.props.id}</h1>
+<button>Begin health check</button>
+<HealthCheckTopic 
+  title="Topic 1"
+  onNext={(rating) => { 
+    console.log('onNext rating '+rating) 
+  }} 
+/>
+~~~~
+
+*components/HealthCheckTopic.js*
+
+~~~~
+import PropTypes from 'prop-types'
+import { useState } from 'react'
+
+const HealthCheckTopic = (props) => {
+
+  const [rating, setRating] = useState(null);
+
+  const onChange = e => {
+    setRating(e.target.value)
+  }
+
+  return (
+    <div>
+      <h2>{props.title}</h2>
+      <div>
+        <input onChange={onChange} type="radio" id="awesome" name="rating" value="2" />
+        <label htmlFor="awesome">Awesome</label>
+      </div>
+      <div>
+        <input onChange={onChange} type="radio" id="ok" name="rating" value="1" />
+        <label htmlFor="ok">OK</label>
+      </div>
+      <div>
+        <input onChange={onChange} type="radio" id="sucky" name="rating" value="0" />
+        <label htmlFor="sucky">Sucky</label>
+      </div>
+      <button disabled={rating == null} onClick={() => {props.onNext(rating)}}>Next</button>
+    </div>
+  )
+}
+
+HealthCheckTopic.propTypes = {
+    title: PropTypes.string.isRequired,
+    onNext: PropTypes.func.isRequired
+}
+
+export default HealthCheckTopic
+~~~~
+
+As a starting point, we have a click to begin button that does nothing, and a HealthCheckTopic that takes some props, include an `onNext` function that will provide the rating that the user selects.
+
+Next, we will add the steps to advance through the health check. In a separate file, we can define some data with the topics from the Spotify Health Check.
+
+
+
+
+TO DO NEXT:
+Make HealthCheckTopics that contains the HealthCheckTopic component and does the steps.
+
+
+
+
+
+
+
+
+

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState } from 'react'
 import { Mutation } from 'react-apollo'
 import gql from 'graphql-tag'
 import Link from 'next/link'
@@ -11,7 +11,7 @@ const CREATEHEALTHCHECK_MUTATION = gql`
   }
 `
 
-const HealthCheckCreator = (props) => {
+const HealthCheckCreator = () => {
   const [id, setId] = useState(null);
   const [loading, setLoading] = useState(false);
 
