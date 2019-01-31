@@ -307,56 +307,63 @@ Let’s add a begin health check button, then display some UI that allows people
 *pages/healthcheck.js*
 
 ~~~~
+...
 <h1>Loaded HealthCheck id: {this.props.id}</h1>
 <button>Begin health check</button>
-<HealthCheckTopic 
-  title="Topic 1"
-  onNext={(rating) => { 
-    console.log('onNext rating '+rating) 
-  }} 
-/>
+<HealthCheckTopics />
+...
 ~~~~
 
-*components/HealthCheckTopic.js*
+*components/HealthCheckTopics.js*
 
 ~~~~
 import PropTypes from 'prop-types'
 import { useState } from 'react'
 
-const HealthCheckTopic = (props) => {
+const HealthCheckTopics = (props) => {
 
-  const [rating, setRating] = useState(null);
+  const [currRating, setCurrRating] = useState(null)
+  const [ratings, setRatings] = useState([])
+  
+  const topicTitles = ['Easy to release','Suitable Process','Tech Quality','Value','Speed','Mission','Fun','Learning','Support','Pawns']
+  const currTopic = ratings.length
 
   const onChange = e => {
-    setRating(e.target.value)
+    setCurrRating(e.target.value)
+  }
+
+  const onConfirmRating = () => {
+    setRatings(ratings.concat([currRating]))
+    setCurrRating(null)
   }
 
   return (
     <div>
-      <h2>{props.title}</h2>
-      <div>
-        <input onChange={onChange} type="radio" id="awesome" name="rating" value="2" />
-        <label htmlFor="awesome">Awesome</label>
+      <h2>{topicTitles[currTopic]}</h2>
+      <div onChange={onChange}>
+        <div>
+          <input checked={currRating === '2'}  type="radio" id="awesome" name="rating" value="2" />
+          <label htmlFor="awesome">Awesome</label>
+        </div>
+        <div>
+          <input checked={currRating === '1'} type="radio" id="ok" name="rating" value="1" />
+          <label htmlFor="ok">OK</label>
+        </div>
+        <div>
+          <input checked={currRating === '0'} type="radio" id="sucky" name="rating" value="0" />
+          <label htmlFor="sucky">Sucky</label>
+        </div>
       </div>
-      <div>
-        <input onChange={onChange} type="radio" id="ok" name="rating" value="1" />
-        <label htmlFor="ok">OK</label>
-      </div>
-      <div>
-        <input onChange={onChange} type="radio" id="sucky" name="rating" value="0" />
-        <label htmlFor="sucky">Sucky</label>
-      </div>
-      <button disabled={rating == null} onClick={() => {props.onNext(rating)}}>Next</button>
+      <button 
+        disabled={currRating == null} 
+        onClick={onConfirmRating}
+        children="Next"
+      />
     </div>
   )
 }
 
-HealthCheckTopic.propTypes = {
-    title: PropTypes.string.isRequired,
-    onNext: PropTypes.func.isRequired
-}
-
-export default HealthCheckTopic
+export default HealthCheckTopics
 ~~~~
 
 As a starting point, we have a click to begin button that does nothing, and a HealthCheckTopic that takes some props, include an `onNext` function that will provide the rating that the user selects.
