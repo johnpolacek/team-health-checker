@@ -20,6 +20,7 @@ init graphcool api
 Set up the schema in the types.grapql file. Our schema has 2 types, HealthChecks and the HealthCheckResponses for that HealthCheck. Each HealthCheckResponse has 11 individual questions that will get assigned an integer by the person responding to the health check.
 
 *api/types.grapql*
+
 ~~~~
 type HealthCheck @model {
   id: ID! @isUnique
@@ -29,17 +30,7 @@ type HealthCheck @model {
 type HealthCheckResponse @model {
   id: ID! @isUnique
   healthCheck: HealthCheck! @relation(name: "HealthCheckInstance")
-  q1: Int!
-  q2: Int!
-  q3: Int!
-  q4: Int!
-  q5: Int!
-  q6: Int!
-  q7: Int!
-  q8: Int!
-  q9: Int!
-  q10: Int!
-  q11: Int!
+  ratings: [Int!]!
 }
 ~~~~
 
@@ -59,6 +50,7 @@ Now, let’s get into the React code. Returning to the next.js example, we can s
 Open `index.js` and replace it with this:
 
 *pages/index.js*
+
 ~~~~
 import App from '../components/App'
 import { ApolloConsumer } from 'react-apollo'
@@ -302,25 +294,24 @@ For the next part of developing this app, we will allow people to fill in the he
 
 We won’t worry about styling or a great user experience just yet, as this is just an exploratory proof-of-concept at this point.
 
-Let’s add a begin health check button, then display some UI that allows people to provide responses to each of the questions.
+Let’s add a component that allows people to provide responses to each of the topics.
 
 *pages/healthcheck.js*
 
 ~~~~
 ...
 <h1>Loaded HealthCheck id: {this.props.id}</h1>
-<button>Begin health check</button>
-<HealthCheckTopics />
+<HealthCheckForm onComplete={() => {console.log('complete!')}} />
 ...
 ~~~~
 
-*components/HealthCheckTopics.js*
+*components/HealthCheck.js*
 
 ~~~~
 import PropTypes from 'prop-types'
 import { useState } from 'react'
 
-const HealthCheckTopics = (props) => {
+const HealthCheck = (props) => {
 
   const [currRating, setCurrRating] = useState(null)
   const [ratings, setRatings] = useState([])
@@ -329,28 +320,33 @@ const HealthCheckTopics = (props) => {
   const currTopic = ratings.length
 
   const onChange = e => {
-    setCurrRating(e.target.value)
+    setCurrRating(parseInt(e.target.value))
   }
 
   const onConfirmRating = () => {
-    setRatings(ratings.concat([currRating]))
-    setCurrRating(null)
+    const newRatings = ratings.concat([currRating])
+    if (newRatings.length === topicTitles.length) {
+      props.onComplete(newRatings)
+    } else {
+      setRatings(newRatings)
+      setCurrRating(null)
+    }  
   }
 
   return (
-    <div>
+    <form>
       <h2>{topicTitles[currTopic]}</h2>
       <div onChange={onChange}>
         <div>
-          <input checked={currRating === '2'}  type="radio" id="awesome" name="rating" value="2" />
+          <input checked={currRating === 2}  type="radio" id="awesome" name="rating" value="2" />
           <label htmlFor="awesome">Awesome</label>
         </div>
         <div>
-          <input checked={currRating === '1'} type="radio" id="ok" name="rating" value="1" />
+          <input checked={currRating === 1} type="radio" id="ok" name="rating" value="1" />
           <label htmlFor="ok">OK</label>
         </div>
         <div>
-          <input checked={currRating === '0'} type="radio" id="sucky" name="rating" value="0" />
+          <input checked={currRating === 0} type="radio" id="sucky" name="rating" value="0" />
           <label htmlFor="sucky">Sucky</label>
         </div>
       </div>
@@ -359,24 +355,104 @@ const HealthCheckTopics = (props) => {
         onClick={onConfirmRating}
         children="Next"
       />
-    </div>
+    </form>
   )
 }
 
-export default HealthCheckTopics
+HealthCheck.propTypes = {
+  onComplete: PropTypes.func.isRequired
+}
+
+export default HealthCheck
 ~~~~
 
-As a starting point, we have a click to begin button that does nothing, and a HealthCheckTopic that takes some props, include an `onNext` function that will provide the rating that the user selects.
+Our HealthCheck component contains an array of topic titles, and an array of ratings responses. 
 
-Next, we will add the steps to advance through the health check. In a separate file, we can define some data with the topics from the Spotify Health Check.
+For each topic, the user will click a button which will add the rating to the array of ratings responses and go to the next topic. When they have provided ratings for all the topics, an `onComplete` function prop will be called.
 
+Next, we need to build in some views depending on where the user is in the health check process. Let’s add a button for the user to click to start the health check, and a results view for when the health check is complete.
 
+*pages/healthcheck.js*
 
+~~~~
+export default class extends React.Component {
 
-TO DO NEXT:
-Make HealthCheckTopics that contains the HealthCheckTopic component and does the steps.
+  constructor(props) {
+    super(props)
 
+    this.views = {
+      READY: 'READY',
+      IN_PROGRESS: 'IN_PROGRESS',
+      COMPLETE: 'COMPLETE'
+    }
 
+    this.state = {
+      view: this.views.READY
+    }
+  }
+
+  static getInitialProps ({ query: { id } }) {
+    return { id }
+  }
+
+  render () {
+    
+    return <App>
+      <Query query={HEALTHCHECK_QUERY} variables={{id: this.props.id}}>
+        {({ loading, error, data }) => {
+          if (loading) return <div>Loading...</div>
+          if (error || !data.HealthCheck) return <div>Error: Could not load HealthCheck with id: {this.props.id}</div>
+          return (
+            <>
+              {{
+                READY: <>
+                  <button onClick={() => this.setState({view: this.views.IN_PROGRESS})}>Begin health check</button>
+                </>,
+                IN_PROGRESS: <HealthCheck onComplete={() => {
+                  console.log('COMPLETE!')
+                  this.setState({view: this.views.COMPLETE})}} 
+                />,
+                COMPLETE: <p>Thanks for completing the health check!</p>
+              }[this.state.view]}
+            </>
+          )
+        }}
+      </Query>
+    </App>
+  }
+}
+~~~~
+
+To manage the state of which view is active, we use a views object as an enum and then within our render we have an inline object that renders a given view based on the current view state. 
+
+Another way to write this could be with a switch statement or a series of simple conditional checks.
+
+~~~~
+{
+  this.state.view == this.views.READY &&
+  <>
+    <h1>Loaded HealthCheck id: {this.props.id}</h1>
+    <button onClick={() => this.setState({view: this.views.IN_PROGRESS})}>Begin health check</button>
+  </>
+}
+{
+  this.state.view == this.views.IN_PROGRESS &&
+  <HealthCheck onComplete={() => {
+    console.log('COMPLETE!')
+    this.setState({view: this.views.COMPLETE})}} 
+  />
+}
+{
+  this.state.view == this.views.COMPLETE &&
+  <p>Thanks for completing the health check!</p>
+}
+~~~~
+
+##Part 4
+
+In the last part, we created a component for a user to enter their responses to a health check, but we didn’t do anything with them. Now we need to store their answers in our GraphQL database and display them. 
+
+To achieve this, as we did when creating a new health check, we will be creating a mutation, in this case a nested create mutation (see the [Graphcool docs](https://www.graph.cool/docs/reference/graphql-api/mutation-api-ol0yuoz6go#nested-create-mutations))
 
 
 

@@ -1,6 +1,6 @@
 import React from 'react'
 import App from '../components/App'
-import HealthCheckTopics from '../components/HealthCheckTopics'
+import HealthCheck from '../components/HealthCheck'
 import { Query } from 'react-apollo'
 import gql from 'graphql-tag'
 
@@ -14,10 +14,24 @@ const HEALTHCHECK_QUERY = gql`query HealthCheck($id: ID!) {
 }`
 
 export default class extends React.Component {
+
+  constructor(props) {
+    super(props)
+
+    this.views = {
+      READY: 'READY',
+      IN_PROGRESS: 'IN_PROGRESS',
+      COMPLETE: 'COMPLETE'
+    }
+
+    this.state = {
+      view: this.views.READY
+    }
+  }
+
   static getInitialProps ({ query: { id } }) {
     return { id }
   }
-
 
   render () {
     
@@ -28,9 +42,16 @@ export default class extends React.Component {
           if (error || !data.HealthCheck) return <div>Error: Could not load HealthCheck with id: {this.props.id}</div>
           return (
             <>
-              <h1>Loaded HealthCheck id: {this.props.id}</h1>
-              <button>Begin health check</button>
-              <HealthCheckTopics />
+              {{
+                READY: <>
+                  <button onClick={() => this.setState({view: this.views.IN_PROGRESS})}>Begin health check</button>
+                </>,
+                IN_PROGRESS: <HealthCheck id={this.props.id} onComplete={(data) => {
+                  console.log('COMPLETE!', data)
+                  this.setState({view: this.views.COMPLETE})}} 
+                />,
+                COMPLETE: <p>Thanks for completing the health check!</p>
+              }[this.state.view]}
             </>
           )
         }}
