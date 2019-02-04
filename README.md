@@ -165,11 +165,12 @@ Now let’s add a query to check whether id from the url is a valid HealthCheck 
 *pages/healthcheck.js*
 
 ~~~~
-const HEALTHCHECK_QUERY = gql`query HealthCheck($id: ID!) {
+const getHealthCheckQuery = gql`query HealthCheck($id: ID!) {
   HealthCheck(id: $id) {
     id
     responses {
       id
+      ratings
     }
   }
 }`
@@ -181,7 +182,7 @@ export default class extends React.Component {
 
   render () {
     return <App>
-      <Query query={HEALTHCHECK_QUERY} variables={{id: this.props.id}}>
+      <Query query={getHealthCheckQuery} variables={{id: this.props.id}}>
         {({ loading, error, data }) => {
           if (loading) return <div>Loading...</div>
           if (error || !data.HealthCheck) return <div>Error: Could not load HealthCheck with id: {this.props.id}</div>
@@ -334,7 +335,7 @@ const HealthCheck = (props) => {
   }
 
   return (
-    <form>
+    <>
       <h2>{topicTitles[currTopic]}</h2>
       <div onChange={onChange}>
         <div>
@@ -355,7 +356,7 @@ const HealthCheck = (props) => {
         onClick={onConfirmRating}
         children="Next"
       />
-    </form>
+    </>
   )
 }
 
@@ -398,7 +399,7 @@ export default class extends React.Component {
   render () {
     
     return <App>
-      <Query query={HEALTHCHECK_QUERY} variables={{id: this.props.id}}>
+      <Query query={getHealthCheckQuery} variables={{id: this.props.id}}>
         {({ loading, error, data }) => {
           if (loading) return <div>Loading...</div>
           if (error || !data.HealthCheck) return <div>Error: Could not load HealthCheck with id: {this.props.id}</div>
@@ -452,11 +453,233 @@ Another way to write this could be with a switch statement or a series of simple
 
 In the last part, we created a component for a user to enter their responses to a health check, but we didn’t do anything with them. Now we need to store their answers in our GraphQL database and display them. 
 
-To achieve this, as we did when creating a new health check, we will be creating a mutation, in this case a nested create mutation (see the [Graphcool docs](https://www.graph.cool/docs/reference/graphql-api/mutation-api-ol0yuoz6go#nested-create-mutations))
+To achieve this, as we did when creating a new health check, we will be creating a mutation, in this case a nested create mutation (see the [Graphcool docs](https://www.graph.cool/docs/reference/graphql-api/mutation-api-ol0yuoz6go#nested-create-mutations)), to add the health check response and link it to the id of the health check.
 
+Update the health check component with a confirm step to send the completed response to the database.
 
+*components/HealthCheck.js*
 
+~~~~
+import PropTypes from 'prop-types'
+import { useState } from 'react'
+import { Mutation } from 'react-apollo'
+import gql from 'graphql-tag'
 
+const createHealthCheckResponseMutation = gql`
+  mutation createHealthCheckResponse($ratings: [Int!]!, $healthCheckId: ID!) {
+    createHealthCheckResponse(ratings: $ratings, healthCheckId: $healthCheckId) {
+      id
+    }
+  }
+`
 
+const HealthCheck = (props) => {
 
+  const [currRating, setCurrRating] = useState(null)
+  const [ratings, setRatings] = useState([])
+  const [isDone, setIsDone] = useState(false)
+  const [loading, setLoading] = useState(false)
+  
+  // const topicTitles = ['Easy to release','Suitable Process','Tech Quality','Value','Speed','Mission','Fun','Learning','Support','Pawns']
+  const topicTitles = ['Easy to release','Suitable Process']
+  const currTopic = ratings.length
+  const ratingLabels = {
+    0: 'Sucky',
+    1: 'OK',
+    2: 'Awesome'
+  }
+
+  const onChange = e => {
+    setCurrRating(parseInt(e.target.value))
+  }
+
+  const onConfirmRating = () => {
+    setRatings(ratings.concat([currRating]))
+    setCurrRating(null)
+  }
+
+  return (
+    <>
+      {
+        ratings.length === topicTitles.length ? (
+          <Mutation 
+            mutation={createHealthCheckResponseMutation} 
+            variables={{ ratings, healthCheckId: props.id }}
+            onCompleted={(data) => {
+              console.log('createHealthCheckResponseMutation onCompleted', data)
+              props.onComplete(ratings)
+            }}
+          >
+            {
+              createMutation => {
+                return (
+                  <>
+                    {
+                      ratings.map((rating, i) => {
+                        return (<div key={topicTitles[i]}>{topicTitles[i]}: {ratingLabels[rating]}</div>)
+                      })
+                    }
+                    <button 
+                      onClick={() => {
+                        setLoading(true)
+                        createMutation()
+                      }}
+                      children = {loading ? 'Saving...' : 'Confirm'}
+                    />
+                  </>
+                )
+              }
+            }
+          </Mutation>
+        ) : (
+          <>
+            <h2>{topicTitles[currTopic]}</h2>
+            <div onChange={onChange}>
+              <div>
+                <input onChange={() => {}} checked={currRating === 2}  type="radio" id={ratingLabels[2]} name="rating" value="2" />
+                <label htmlFor={ratingLabels[2]}>{ratingLabels[2]}</label>
+              </div>
+              <div>
+                <input onChange={() => {}} checked={currRating === 1} type="radio" id={ratingLabels[1]} name="rating" value="1" />
+                <label htmlFor={ratingLabels[1]}>{ratingLabels[1]}</label>
+              </div>
+              <div>
+                <input onChange={() => {}} checked={currRating === 0} type="radio" id={ratingLabels[0]} name="rating" value="0" />
+                <label htmlFor={ratingLabels[0]}>{ratingLabels[0]}</label>
+              </div>
+            </div>
+            <button 
+              disabled={currRating == null} 
+              onClick={onConfirmRating}
+              children="Next"
+            />
+          </>
+        )
+      }
+    </>
+  )
+}
+
+HealthCheck.propTypes = {
+  id: PropTypes.string.isRequired,
+  onComplete: PropTypes.func.isRequired
+}
+
+export default HealthCheck
+
+~~~~
+
+Next, we need a way to review all the health check responses and see the results of all the completed health checks. We will make a HealthCheckComplete component and again use a Query to pull the data from GraphQL.
+
+Rather than defining our queries and mutations within the various components, it makes sense to bring them all together in one file and import them in as needed. While we’re at it, let’s put our `topicTitles` array in there as well since we’ll want to share that across our app.
+
+*api/operations.js*
+
+~~~~
+import gql from 'graphql-tag';
+
+export const topicTitles = ['Easy to release','Suitable Process','Tech Quality','Value','Speed','Mission','Fun','Learning','Support','Pawns']
+
+export const getHealthCheckQuery = gql`query HealthCheck($id: ID!) {
+  HealthCheck(id: $id) {
+    id
+    responses {
+      id
+      ratings
+    }
+  }
+}`
+
+export const createHealthCheckMutation = gql`
+  mutation createHealthCheck($responses: [HealthCheckresponsesHealthCheckResponse!]) {
+    createHealthCheck(responses: $responses) {
+      id
+    }
+  }
+`
+
+export const createHealthCheckResponseMutation = gql`
+  mutation createHealthCheckResponse($ratings: [Int!]!, $healthCheckId: ID!) {
+    createHealthCheckResponse(ratings: $ratings, healthCheckId: $healthCheckId) {
+      id
+    }
+  }
+`
+~~~~
+
+Now, for the HealthCheckComplete component, we will once again wrap the content in a Query component that will pass the GraphQL data to its children.
+
+To display the results, we can iterate through the responses and increment the values (Awesome/OK/Sucky) for each topic.
+
+*components/HealthCheckComplete.js*
+
+~~~~
+import PropTypes from 'prop-types'
+import { Query } from 'react-apollo'
+import { getHealthCheckQuery, topicTitles } from '../api/operations'
+
+const HealthCheckComplete = (props) => {
+
+  return (
+    <Query query={getHealthCheckQuery} variables={{id: props.id}}>
+      {({ loading, error, data }) => {
+        if (loading) return <div>Loading...</div>
+        if (error || !data.HealthCheck) return <div>Error: Could not load HealthCheck with id: {this.props.id}</div>
+
+        let topicRatings = topicTitles.map(() => { return [0,0,0] })
+        const responses = data.HealthCheck.responses.forEach((response) => {
+     			response.ratings.forEach((rating, topicIndex) => {
+     				topicRatings[topicIndex][rating]++
+     			})
+        })
+
+        return (
+          <>
+          	<p>Complete! Here are the results:</p>
+          	{
+          		topicRatings.map((topic, topicIndex) => 
+          			<div key={'topicRating'+topicIndex}>
+          				<h3>{topicTitles[topicIndex]}</h3>
+          				<p>Awesome: {topic[2]}</p>
+          				<p>OK: {topic[1]}</p>
+          				<p>Sucky: {topic[0]}</p>
+          				<p>Average: {topic[1] + (topic[2] * 2)/data.HealthCheck.responses.length}</p>
+          			</div>
+          		)
+          	}
+          </>
+        )
+      }}
+    </Query>
+  )
+}
+
+HealthCheckComplete.propTypes = {
+  id: PropTypes.string.isRequired
+}
+
+export default HealthCheckComplete
+
+~~~~
+
+A key aspect of our GraphQL api is that the getHealthCheckQuery is cached, so when the onComplete event in our HealthCheck component fires, we need to tell it to refetch that query.
+
+*components/HealthCheck.js*
+
+~~~~
+...
+<Mutation
+  mutation={createHealthCheckResponseMutation} 
+  variables={{ ratings, healthCheckId: props.id }}
+  onCompleted={props.onComplete}
+  refetchQueries={() => {
+    return [{
+      query: getHealthCheckQuery,
+      variables: { id: props.id }
+    }]
+  }}
+  awaitRefetchQueries={true}
+>  
+...
+~~~~
 

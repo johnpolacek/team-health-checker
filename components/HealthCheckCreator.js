@@ -1,15 +1,7 @@
 import { useState } from 'react'
 import { Mutation } from 'react-apollo'
-import gql from 'graphql-tag'
+import { createHealthCheckMutation } from '../api/operations'
 import Link from 'next/link'
-
-const CREATEHEALTHCHECK_MUTATION = gql`
-  mutation createHealthCheck($responses: [HealthCheckresponsesHealthCheckResponse!]) {
-    createHealthCheck(responses: $responses) {
-      id
-    }
-  }
-`
 
 const HealthCheckCreator = () => {
   const [id, setId] = useState(null);
@@ -27,7 +19,7 @@ const HealthCheckCreator = () => {
           </>
         ) : (
           <Mutation 
-            mutation={CREATEHEALTHCHECK_MUTATION} 
+            mutation={createHealthCheckMutation} 
             onCompleted={(data) => {setId(data.createHealthCheck.id)}}
           >
             {createMutation => <button 

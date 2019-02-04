@@ -1,14 +1,47 @@
 import PropTypes from 'prop-types'
-import { useState } from 'react'
+import { Query } from 'react-apollo'
+import { getHealthCheckQuery, topicTitles } from '../api/operations'
 
-const HealthCheckResults = (props) => {
+const HealthCheckComplete = (props) => {
 
   return (
-    <div>
-      <p>Results will go here.
-    </div>
+    <Query query={getHealthCheckQuery} variables={{id: props.id}}>
+      {({ loading, error, data }) => {
+      	console.log('HealthCheckComplete data',data)
+        if (loading) return <div>Loading...</div>
+        if (error || !data.HealthCheck) return <div>Error: Could not load HealthCheck with id: {this.props.id}</div>
+
+        let topicRatings = topicTitles.map(() => { return [0,0,0] })
+        const responses = data.HealthCheck.responses.forEach((response) => {
+     			response.ratings.forEach((rating, topicIndex) => {
+     				topicRatings[topicIndex][rating]++
+     			})
+        })
+
+        return (
+          <>
+          	<p>Complete! Here are the results:</p>
+          	{
+          		topicRatings.map((topic, topicIndex) => 
+          			<div key={'topicRating'+topicIndex}>
+          				<h3>{topicTitles[topicIndex]}</h3>
+          				<p>Awesome: {topic[2]}</p>
+          				<p>OK: {topic[1]}</p>
+          				<p>Sucky: {topic[0]}</p>
+          				<p>Average: {topic[1] + (topic[2] * 2)/data.HealthCheck.responses.length}</p>
+          			</div>
+          		)
+          	}
+          </>
+        )
+      }}
+    </Query>
   )
 }
 
-export default HealthCheckResults
+HealthCheckComplete.propTypes = {
+  id: PropTypes.string.isRequired
+}
+
+export default HealthCheckComplete
 

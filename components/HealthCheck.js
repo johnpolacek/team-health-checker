@@ -1,15 +1,7 @@
 import PropTypes from 'prop-types'
 import { useState } from 'react'
 import { Mutation } from 'react-apollo'
-import gql from 'graphql-tag'
-
-const CREATEHEALTHCHECKRESPONSE_MUTATION = gql`
-  mutation createHealthCheckResponse($ratings: [Int!]!, $healthCheckId: ID!) {
-    createHealthCheckResponse(ratings: $ratings, healthCheckId: $healthCheckId) {
-      id
-    }
-  }
-`
+import { createHealthCheckResponseMutation, getHealthCheckQuery, topicTitles } from '../api/operations'
 
 const HealthCheck = (props) => {
 
@@ -18,8 +10,6 @@ const HealthCheck = (props) => {
   const [isDone, setIsDone] = useState(false)
   const [loading, setLoading] = useState(false)
   
-  // const topicTitles = ['Easy to release','Suitable Process','Tech Quality','Value','Speed','Mission','Fun','Learning','Support','Pawns']
-  const topicTitles = ['Easy to release','Suitable Process']
   const currTopic = ratings.length
   const ratingLabels = {
     0: 'Sucky',
@@ -37,16 +27,21 @@ const HealthCheck = (props) => {
   }
 
   return (
-    <div>
+    <>
       {
         ratings.length === topicTitles.length ? (
           <Mutation 
-            mutation={CREATEHEALTHCHECKRESPONSE_MUTATION} 
+            mutation={createHealthCheckResponseMutation} 
             variables={{ ratings, healthCheckId: props.id }}
-            onCompleted={(data) => {
-              console.log('CREATEHEALTHCHECKRESPONSE_MUTATION onCompleted', data)
-              props.onComplete(ratings)
+            onCompleted={props.onComplete}
+            refetchQueries={() => {
+              console.log("refetchQueries")
+                return [{
+                    query: getHealthCheckQuery,
+                    variables: { id: props.id }
+                }]
             }}
+            awaitRefetchQueries={true}
           >
             {
               createMutation => {
@@ -94,7 +89,7 @@ const HealthCheck = (props) => {
           </>
         )
       }
-    </div>
+    </>
   )
 }
 
