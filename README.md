@@ -683,3 +683,42 @@ A key aspect of our GraphQL api is that the getHealthCheckQuery is cached, so wh
 ...
 ~~~~
 
+##Part 5
+
+We have a basic working proof-of-concept for the Health Check web app. Now it is time to improve the design and make it more user-friendly.
+
+To do this we are going to be using Rebass, a small library of base UI components for React meant to work well with design systems.
+
+
+https://uxplanet.org/4-creative-concepts-of-slider-control-1f8839b05943
+
+http://blog.crisp.se/wp-content/uploads/2014/02/Team-barometer-self-evaluation-tool-Cards.pdf
+https://blog.crisp.se/2014/01/30/jimmyjanlen/team-barometer-self-evaluation-tool
+
+https://medium.com/the-liberators/agile-teams-dont-use-happiness-metrics-measure-team-morale-3050b339d8af
+
+https://www.atlassian.com/team-playbook/health-monitor/project-teams
+
+https://sidlee.com/en/?ref=bestwebsite.gallery
+https://wellset.co/home
+https://www.sysdoc.com/
+https://futurecomes.com/
+https://rallyinteractive.com/
+http://thrivesolo.com/
+https://econsultancy.com/21-first-class-examples-of-effective-web-form-design/
+
+## Part 6
+
+Now that we have a working prototype of our app, we should add testing. 
+
+Some schools of thought would say that should have been step #1, but I have found that when you are still in the creative, figuring-it-out stage, it can be best to build a stable version first, with minimal features, then add the testing, especially before the project gets too big.
+
+## Part 7
+
+To deploy our app, we will use [Now](https://zeit.co/now) by [Zeit](https://zeit.co).
+
+First, we will need to sign up for an account and install the CLI. Refer to the [docs](https://zeit.co/docs) for more info and installation instructions.
+
+
+
+
