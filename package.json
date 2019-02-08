@@ -1,6 +1,6 @@
 {
-  "name": "with-apollo",
-  "version": "2.0.0",
+  "name": "team-health-checker",
+  "version": "0.0.1",
   "scripts": {
     "dev": "node server.js",
     "build": "next build",
@@ -13,10 +13,14 @@
     "next": "latest",
     "path-match": "^1.2.4",
     "prop-types": "^15.6.2",
-    "react": "^16.8.0-alpha.1",
+    "react": "^16.8.1",
     "react-apollo": "^2.4.1",
-    "react-dom": "^16.8.0-alpha.1"
+    "react-dom": "^16.8.1"
   },
-  "author": "",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rebassjs/rebass.git"
+  },
+  "author": "John Polacek",
   "license": "ISC"
 }
