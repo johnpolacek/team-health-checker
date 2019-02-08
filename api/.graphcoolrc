@@ -1,3 +1,0 @@
-targets:
-  prod: shared-us-west-2/cjrfaxrmy463l0129ws376vhv
-  default: prod
