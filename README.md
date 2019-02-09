@@ -2,6 +2,8 @@
 
 ## Part 1
 
+Even though I am primarily a front end developer, I find that for any project, starting from a data schema first approach is a good one. 
+
 Starting point from [Next.js examples](https://github.com/zeit/next.js/tree/master/examples/with-apollo)
 
 ~~~~
@@ -687,8 +689,122 @@ A key aspect of our GraphQL api is that the getHealthCheckQuery is cached, so wh
 
 We have a basic working proof-of-concept for the Health Check web app. Now it is time to improve the design and make it more user-friendly.
 
-To do this we are going to be using Rebass, a small library of base UI components for React meant to work well with design systems.
+You don’t need to use CSS-in-JS to build React Apps, but styles are often closely tied to state at the component layer, so for that and other reasons, it is quite popular. Let’s do it!
 
+First off, let’s set up some theming configuration for colors, typography and spacing. To do this, we will use a [ThemeProvider component](https://www.styled-components.com/docs/advanced#theming) from [styled components](https://www.styled-components.com/)
+
+~~~~
+$ npm i styled-components
+~~~~
+
+ThemeProvider doesn’t do much without a theme, so let’s set up some properties we can use to style all our UI components.
+
+*theme.js*
+
+~~~~
+export const font = `'avenir next', avenir, helvetica, arial, sans-serif`;
+export const monospace = `"SF Mono", "Roboto Mono", Menlo, monospace`
+export const fontSizes = [12,14,16,20,24,32,48,64,72,96]
+export const weights = [200,400,700]
+
+export const colors = {
+  "base": "#4169e1",
+  "black": "#000",
+  "blue": "#4169e1",
+  ....
+}
+
+export const breakpoints = ['32em','48em','64em','80em']
+export const space = [0,4,8,16,32,64,128]
+export const radius = 4
+
+export default {
+  font,
+  monospace,
+  fontFamilies,
+  weights,
+  fontSizes,
+  colors,
+  breakpoints,
+  space,
+  radius
+}
+~~~~
+
+[Next.js](https://nextjs.org) has a [bare-bones example](https://github.com/zeit/next.js/tree/master/examples/with-styled-components) of using [styled-components](https://www.styled-components.com/) with server-side rendering so that we can ship a minimal amount of CSS on page load. 
+
+The killer feature here is that no matter which page someone lands on, they will automatically get the critical css for that page inlined into the document head.
+
+We can also apply [normalize.css](https://necolas.github.io/normalize.css/) and any other css we want to apply to every page across our web app.
+
+*pages/_document.js*
+
+~~~~
+import Document, { Head, Main, NextScript } from 'next/document'
+import { ServerStyleSheet } from 'styled-components'
+
+export default class MyDocument extends Document {
+  static getInitialProps ({ renderPage }) {
+    const sheet = new ServerStyleSheet()
+    const page = renderPage(App => props => sheet.collectStyles(<App {...props} />))
+    const styleTags = sheet.getStyleElement()
+    return { ...page, styleTags }
+  }
+
+  // headcss | normalize.css v8.0.0 | github.com/necolas/normalize.css */
+  const headCSS = `/*! normalize.css v8.0.0 | MIT License | github.com/necolas/normalize.css */
+button,hr,input{overflow:visible}progress,sub,sup{vertical-align:baseline}[type=checkbox],[type=radio],legend{box-sizing:border-box;padding:0}html{line-height:1.15;-webkit-text-size-adjust:100%}body{margin:0}h1{font-size:2em;margin:.67em 0}hr{box-sizing:content-box;height:0}code,kbd,pre,samp{font-family:monospace,monospace;font-size:1em}a{background-color:transparent}abbr[title]{border-bottom:none;text-decoration:underline;text-decoration:underline dotted}b,strong{font-weight:bolder}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative}sub{bottom:-.25em}sup{top:-.5em}img{border-style:none}button,input,optgroup,select,textarea{font-family:inherit;font-size:100%;line-height:1.15;margin:0}button,select{text-transform:none}[type=button],[type=reset],[type=submit],button{-webkit-appearance:button}[type=button]::-moz-focus-inner,[type=reset]::-moz-focus-inner,[type=submit]::-moz-focus-inner,button::-moz-focus-inner{border-style:none;padding:0}[type=button]:-moz-focusring,[type=reset]:-moz-focusring,[type=submit]:-moz-focusring,button:-moz-focusring{outline:ButtonText dotted 1px}fieldset{padding:.35em .75em .625em}legend{color:inherit;display:table;max-width:100%;white-space:normal}textarea{overflow:auto}[type=number]::-webkit-inner-spin-button,[type=number]::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}[type=search]::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}details{display:block}summary{display:list-item}[hidden],template{display:none}
+html{box-sizing:border-box;} *,*:before,*:after{box-sizing:inherit;} 
+body{margin:0;font-family:'Nunito',sans-serif;line-height:1.6;overflow-x:hidden;}`
+
+  render () {
+    return (
+      <html lang="en">
+        <Head>
+          <title>Team Health Checker</title>
+          <meta charSet="utf-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+          <meta name="theme-color" content="#000000" />
+          <style>{headCSS}</style>
+          {this.props.styleTags}
+        </Head>
+        <body>
+          <Main />
+          <NextScript />
+        </body>
+      </html>
+    )
+  }
+}
+~~~~
+
+[Styled System](https://jxnblk.com/styled-system/) is a library that provides responsive, theme-based style props for our React UI components. By default, it works with [styled components](https://styled-components.com), and we will be using a library called [Styled System HTML](https://johnpolacek.github.io/styled-system-html/) which gives us a set of low level html element components ready for stateful theming.
+
+~~~~
+$ npm i styled-system-html
+~~~~
+
+Now that we have our theme settings and some low level UI components, let’s make our landing page a little more appealing.
+
+*pages/index.js*
+
+~~~~
+import App from '../components/App'
+import HealthCheckCreator from '../components/HealthCheckCreator'
+import { Div, H1, P } from 'styled-system-html'
+
+export default () => (
+  <App>
+  	<Div textAlign="center" py={54}>
+	    <H1 color="base" pt={4} pb={3} fontSize={8} fontWeight="400">Team Health Checker</H1>
+	    <P pb={5} fontSize={3}>Health checks help you find out how your team is doing, and work together to improve.</P>
+	    <HealthCheckCreator />
+	</Div>
+  </App>
+)
+~~~~
+
+Next up, we will update
 
 
 
