@@ -1,6 +1,8 @@
 import App from '../components/App'
 import HealthCheckCreator from '../components/HealthCheckCreator'
-import { Div, H1, P, A } from 'styled-system-html'
+import { Div, H1, P, A, Button } from 'styled-system-html'
+
+import Link from 'next/link'
 
 export default () => (
   <App>
@@ -10,7 +12,7 @@ export default () => (
 		    <P pb={3}>Health checks help you find out how your team is doing, and work together to improve.</P>
 		    <P pb={3}>This health check is based on <A color="cyan" href="https://labs.spotify.com/2014/09/16/squad-health-check-model/">Spotify’s Squad Health Check Model</A>.</P>
 		  </Div>
-	    <HealthCheckCreator />
-	</Div>
+      <HealthCheckCreator />
+	  </Div>
   </App>
 )

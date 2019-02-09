@@ -61,6 +61,10 @@ import gql from 'graphql-tag'
 export default () => (
   <App>
     <h1>Team Health Checker</h1>
+    <div>
+      <p>Health checks help you find out how your team is doing, and work together to improve.</p>
+      <p>This health check is based on <a href="https://labs.spotify.com/2014/09/16/squad-health-check-model/">Spotify’s Squad Health Check Model</a>.</p>
+    </div>
     <ApolloConsumer>
       {client => (
         <button onClick={() => {onClickCreate(client)}}>Create New Health Check</button>
@@ -230,11 +234,16 @@ const HealthCheckCreator = () => {
     <>
       {
         id ? (
-          <>
-            <p>You created a new Health Check!</p>
-            <Link href={'/healthcheck/'+id}>
-              <a>View health check</a>
-            </Link>
+          <h2>You created a new Health Check!</h2>
+            <div>
+              <p>You can share it with your friends by sharing this link:</p>
+              <input readonly type="text" value={window.location.href+'/healthcheck/'+id} /> 
+            </div>
+            <p>
+              <Link prefetch href={'/healthcheck/'+id}>
+                <a>View health check</a>
+              </Link>
+            </p>
           </>
         ) : (
           <Mutation 
@@ -282,6 +291,10 @@ import HealthCheckCreator from '../components/HealthCheckCreator'
 export default () => (
   <App>
     <h1>Team Health Checker</h1>
+    <div>
+      <p>Health checks help you find out how your team is doing, and work together to improve.</p>
+      <p>This health check is based on <a href="https://labs.spotify.com/2014/09/16/squad-health-check-model/">Spotify’s Squad Health Check Model</a>.</p>
+    </div>
     <HealthCheckCreator />
   </App>
 )
@@ -630,25 +643,25 @@ const HealthCheckComplete = (props) => {
 
         let topicRatings = topicTitles.map(() => { return [0,0,0] })
         const responses = data.HealthCheck.responses.forEach((response) => {
-     			response.ratings.forEach((rating, topicIndex) => {
-     				topicRatings[topicIndex][rating]++
-     			})
+          response.ratings.forEach((rating, topicIndex) => {
+            topicRatings[topicIndex][rating]++
+          })
         })
 
         return (
           <>
-          	<p>Complete! Here are the results:</p>
-          	{
-          		topicRatings.map((topic, topicIndex) => 
-          			<div key={'topicRating'+topicIndex}>
-          				<h3>{topicTitles[topicIndex]}</h3>
-          				<p>Awesome: {topic[2]}</p>
-          				<p>OK: {topic[1]}</p>
-          				<p>Sucky: {topic[0]}</p>
-          				<p>Average: {topic[1] + (topic[2] * 2)/data.HealthCheck.responses.length}</p>
-          			</div>
-          		)
-          	}
+            <p>Complete! Here are the results:</p>
+            {
+              topicRatings.map((topic, topicIndex) => 
+                <div key={'topicRating'+topicIndex}>
+                  <h3>{topicTitles[topicIndex]}</h3>
+                  <p>Awesome: {topic[2]}</p>
+                  <p>OK: {topic[1]}</p>
+                  <p>Sucky: {topic[0]}</p>
+                  <p>Average: {topic[1] + (topic[2] * 2)/data.HealthCheck.responses.length}</p>
+                </div>
+              )
+            }
           </>
         )
       }}
@@ -786,6 +799,8 @@ $ npm i styled-system-html
 
 Now that we have our theme settings and some low level UI components, let’s make our landing page a little more appealing.
 
+We can switch the html elements to our components which can accept style props and data from our design theme. Eventually, we can abstract these further into UI components with default styling props so we don't need to repeatedly declare padding, font size, etc.
+
 *pages/index.js*
 
 ~~~~
@@ -795,16 +810,78 @@ import { Div, H1, P } from 'styled-system-html'
 
 export default () => (
   <App>
-  	<Div textAlign="center" py={54}>
-	    <H1 color="base" pt={4} pb={3} fontSize={8} fontWeight="400">Team Health Checker</H1>
-	    <P pb={5} fontSize={3}>Health checks help you find out how your team is doing, and work together to improve.</P>
-	    <HealthCheckCreator />
-	</Div>
+    <Div textAlign="center" py={54}>
+      <H1 color="base" pt={4} pb={3} fontSize={8} fontWeight="400">Team Health Checker</H1>
+      <P pb={5} fontSize={3}>Health checks help you find out how your team is doing, and work together to improve.</P>
+      <HealthCheckCreator />
+  </Div>
   </App>
 )
 ~~~~
 
-Next up, we will update
+*components/HealthCheckCreator.js*
+
+~~~~
+import { useState } from 'react'
+import { Mutation } from 'react-apollo'
+import { createHealthCheckMutation } from '../api/operations'
+import Link from 'next/link'
+import { Div, H2, P, A, Button, Input } from 'styled-system-html'
+
+const HealthCheckCreator = () => {
+  const [id, setId] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  return (
+    <Div px={3}>
+      {
+        id ? (
+          <>
+            <H2 color="green" pb={4} fontSize={5} fontWeight="600">You created a new Health Check!</H2>
+            <Div pb={4}>
+              <P pb={3} fontSize={3}>You can share it with your friends by sharing this link:</P>
+              <Input width={340} p={2} readonly type="text" value={window.location.href+'/healthcheck/'+id} /> 
+            </Div>
+            <P py={4}>
+              <Link prefetch href={'/healthcheck/'+id}>
+                <A href={'/healthcheck/'+id} bg="cyan" color="white" fontSize={4} py={3} px={4} borderRadius="8px" style={{textDecoration:'none'}}>View Health Check</A>
+              </Link>
+            </P>
+          </>
+        ) : (
+          <Mutation 
+            mutation={createHealthCheckMutation} 
+            onCompleted={(data) => {setId(data.createHealthCheck.id)}}
+          >
+            {
+              createMutation => <Button 
+                bg="green" color="white" 
+                fontSize={4} fontWeight="{2}"
+                py={3} px={4} borderRadius="8px"
+                onClick={() => {
+                  setLoading(true)
+                  createMutation()
+                }}
+                children = {loading ? 'Loading...' : 'Create New Health Check'}
+              />
+            }
+          </Mutation>
+        )
+      }
+    </Div>
+  )
+}
+
+export default HealthCheckCreator
+~~~~
+
+Next up, let’s create a new component for the beginning of the health check to make it more friendly to anyone that lands on the link shared with them.
+
+*components/HealthCheckBegin.js*
+
+~~~~
+HealthCheckBegin component...
+~~~~
 
 
 
@@ -883,11 +960,3 @@ With that done, in the command line we can run one command to deploy our project
 ~~~~
 $ now
 ~~~~
-
-
-
-
-
-
-
-
