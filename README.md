@@ -492,7 +492,6 @@ const HealthCheck = (props) => {
 
   const [currRating, setCurrRating] = useState(null)
   const [ratings, setRatings] = useState([])
-  const [isDone, setIsDone] = useState(false)
   const [loading, setLoading] = useState(false)
   
   // const topicTitles = ['Easy to release','Suitable Process','Tech Quality','Value','Speed','Mission','Fun','Learning','Support','Pawns']
@@ -880,7 +879,56 @@ Next up, let’s create a new component for the beginning of the health check to
 *components/HealthCheckBegin.js*
 
 ~~~~
-HealthCheckBegin component...
+import PropTypes from 'prop-types'
+import { Div, H1, P, A, Button } from  'styled-system-html'
+
+const HealthCheckBegin = (props) => {
+
+  return (
+    <Div textAlign="center" py={4}>
+      <H1 color="base" pt={4} pb={3} fontSize={8} fontWeight="400">Begin Team Health Check</H1>
+      <Div pt={3} pb={4} fontSize={3}>
+        <P pb={3}>Health checks help you find out how your team is doing, and work together to improve.</P>
+        <P pb={3}>This health check is based on <A target="block" color="cyan" href="https://labs.spotify.com/2014/09/16/squad-health-check-model/">Spotify’s Squad Health Check Model</A>.</P>
+      </Div>
+      <Button bg="green" color="white" fontSize={4} fontWeight="{2}"py={3} px={4} borderRadius="8px" onClick={props.onBegin}>
+        Begin Health Check
+      </Button>
+    </Div>
+  )
+}
+
+HealthCheckBegin.propTypes = {
+  onBegin: PropTypes.func.isRequired
+}
+
+export default HealthCheckBegin
+~~~~
+
+Let’s import our new `HealthCheckBegin` into component our healthcheck page and render it in the `READY` state.
+
+*pages/healtcheck.js*
+
+~~~~
+...
+return (
+  <>
+    {{
+      READY: <HealthCheckBegin onBegin={() => this.setState({view: this.views.IN_PROGRESS})} />,
+      IN_PROGRESS: <HealthCheck id={this.props.id} onComplete={() => { this.setState({view: this.views.COMPLETE}) }} />,
+      COMPLETE: <HealthCheckComplete id={this.props.id} />
+    }[this.state.view]}
+  </>
+)
+...
+~~~~
+
+Now onto the health check itself. Let’s make a HealthCheckTopic component for collecting the responses.
+
+*components/HealthCheckTopic.js*
+
+~~~~
+
 ~~~~
 
 
@@ -904,11 +952,17 @@ https://econsultancy.com/21-first-class-examples-of-effective-web-form-design/
 
 ## Part 6
 
+Dang. When I built this thing it was for my team to do together with all our laptops open, either in a room together or remote. So, I did not take a ‘mobile first’ design approach when building this app.
+
+Luckily, Styled System makes it really easy to adapt a site for any screen size.
+
+## Part 7
+
 Now that we have a working prototype of our app, we should add testing. 
 
 Some schools of thought would say that should have been step #1, but I have found that when you are still in the creative, figuring-it-out stage, it can be best to build a stable version first, with minimal features, then add the testing, especially before the project gets too big.
 
-## Part 7
+## Part 8
 
 With our tests in place, we can feel confident enough to share our app with the world, or at least some close friends. 
 
