@@ -7,6 +7,7 @@
     "start": "NODE_ENV=production node server.js"
   },
   "dependencies": {
+    "ajv": "^6.8.1",
     "apollo-boost": "^0.1.27",
     "graphql": "^14.1.1",
     "isomorphic-unfetch": "^3.0.0",
@@ -16,6 +17,7 @@
     "react": "^16.8.1",
     "react-apollo": "^2.4.1",
     "react-dom": "^16.8.1",
+    "react-rangeslider": "github:johnpolacek/react-rangeslider",
     "styled-components": "^4.1.3",
     "styled-system-html": "^2.0.7"
   },

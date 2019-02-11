@@ -1,6 +1,10 @@
 import PropTypes from 'prop-types'
 import { Query } from 'react-apollo'
+import HealthCheckIcon from './HealthCheckIcon'
 import { getHealthCheckQuery, topicTitles } from '../api/operations'
+import { Div, H1, H2, P } from 'styled-system-html'
+
+const colors = ['orange','purple','cyan','pink']
 
 const HealthCheckComplete = (props) => {
 
@@ -19,20 +23,24 @@ const HealthCheckComplete = (props) => {
         })
 
         return (
-          <>
-          	<p>Complete! Here are the results:</p>
+          <Div textAlign="center" py={4}>
+            <H1 color="base" pt={4} pb={3} fontSize={6} fontWeight="400">Health Check Complete!</H1>
+          	<P fontSize={3} pb={4}>{data.HealthCheck.responses.length} responses so far. Here are the results...</P>
           	{
           		topicRatings.map((topic, topicIndex) => 
-          			<div key={'topicRating'+topicIndex}>
-          				<h3>{topicTitles[topicIndex]}</h3>
-          				<p>Awesome: {topic[2]}</p>
-          				<p>OK: {topic[1]}</p>
-          				<p>Sucky: {topic[0]}</p>
-          				<p>Average: {topic[1] + (topic[2] * 2)/data.HealthCheck.responses.length}</p>
-          			</div>
+          			<Div pb={4} fontSize={4} key={'topicRating'+topicIndex}>
+          				<H2 width={240} mx="auto" borderBottom="solid 1px" pb={2} mb={3} borderColor={colors[topicIndex % colors.length]} fontSize={3} color={colors[topicIndex % colors.length]}>{topicTitles[topicIndex]}</H2>
+          				<Div width={72} mx="auto">
+                    <HealthCheckIcon rating={Math.round((topic[1] + (topic[2] * 2))/data.HealthCheck.responses.length)} />
+                  </Div>
+                  <P pb={2} fontSize={1}>( average {((topic[1] + (topic[2] * 2))/data.HealthCheck.responses.length).toFixed(2)} )</P>
+                  <P>Awesome: {topic[2]}</P>
+                  <P>OK: {topic[1]}</P>
+                  <P>Sucky: {topic[0]}</P>
+          			</Div>
           		)
           	}
-          </>
+          </Div>
         )
       }}
     </Query>
