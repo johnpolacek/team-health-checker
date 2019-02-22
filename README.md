@@ -377,6 +377,18 @@ Our HealthCheck component contains an array of topic titles, and an array of rat
 
 For each topic, the user will click a button which will add the rating to the array of ratings responses and go to the next topic. When they have provided ratings for all the topics, an `onComplete` function prop will be called.
 
+Let’s make a simple component to show a message when the health check is complete
+
+*components/HealthCheckComplete.js*
+
+~~~~
+export default (props) => {
+  return (
+    <p>Thanks for taking health check {props.id}!</p>
+  )
+}
+~~~~
+
 Next, we need to build in some views depending on where the user is in the health check process. Let’s add a button for the user to click to start the health check, and a results view for when the health check is complete.
 
 *pages/check.js*
@@ -416,10 +428,9 @@ export default class extends React.Component {
                   <button onClick={() => this.setState({view: this.views.IN_PROGRESS})}>Begin health check</button>
                 </>,
                 IN_PROGRESS: <HealthCheck onComplete={() => {
-                  console.log('COMPLETE!')
                   this.setState({view: this.views.COMPLETE})}} 
                 />,
-                COMPLETE: <p>Thanks for completing the health check!</p>
+                COMPLETE: <HealthCheckComplete id={this.props.id} />
               }[this.state.view]}
             </>
           )
@@ -445,13 +456,12 @@ Another way to write this could be with a switch statement or a series of simple
 {
   this.state.view == this.views.IN_PROGRESS &&
   <HealthCheck onComplete={() => {
-    console.log('COMPLETE!')
     this.setState({view: this.views.COMPLETE})}} 
   />
 }
 {
   this.state.view == this.views.COMPLETE &&
-  <p>Thanks for completing the health check!</p>
+  <HealthCheckComplete id={this.props.id} />
 }
 ~~~~
 
