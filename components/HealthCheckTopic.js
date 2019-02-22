@@ -32,7 +32,7 @@ const HealthCheckTopic = (props) => {
         }}
         children="Next"
       />
-      </Div>
+    </Div>
   )
 }
 

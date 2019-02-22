@@ -1,6 +1,6 @@
 import Document, { Head, Main, NextScript } from 'next/document'
 import { ServerStyleSheet } from 'styled-components'
-import theme from './_theme.js'
+import theme from '../components/Theme.js'
 
 export default class MyDocument extends Document {
   static getInitialProps ({ renderPage }) {
