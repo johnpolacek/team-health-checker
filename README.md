@@ -379,7 +379,7 @@ For each topic, the user will click a button which will add the rating to the ar
 
 Next, we need to build in some views depending on where the user is in the health check process. Let’s add a button for the user to click to start the health check, and a results view for when the health check is complete.
 
-*pages/healthcheck.js*
+*pages/check.js*
 
 ~~~~
 export default class extends React.Component {
