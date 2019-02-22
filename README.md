@@ -119,7 +119,7 @@ npm i path-match
 
 Next, let’s grab the `server.js` from the parameterized routing example and put it in the top level of our project directory. Open the file and do a find/replace to change 'blog' to 'healthcheck' to set up the correct routing.
 
-Likewise, copy the `blog.js` into our pages directory, rename it `healthcheck.js` and find/replace 'blog' to 'healthcheck'.
+Likewise, copy the `blog.js` into our pages directory, rename it `check.js` and find/replace 'blog' to 'check'.
 
 Then, we need to update the build scripts in our `package.json` for our server configuration.
 
@@ -137,11 +137,11 @@ Let’s take a look at what we have so far.
 npm run dev
 ~~~~
 
-Go to `http://localhost:3000/healthcheck/123` and you should see the id from the url parameter output to the browser window.
+Go to `http://localhost:3000/check/123` and you should see the id from the url parameter output to the browser window.
 
 Next, we need to check that id from the url against the data in Graphcool. To do that, we’ll need to bring in some code from the previous page. Also, we will be doing a Query instead of a mutation, so change the react-apollo import to import that instead of Mutation.
 
-*pages/healthcheck.js*
+*pages/check.js*
 
 ~~~~
 import React from 'react'
@@ -168,7 +168,7 @@ export default class extends React.Component {
 
 Now let’s add a query to check whether id from the url is a valid HealthCheck id. This time, rather than calleing the query method on the `ApolloClient` directly, we will use Apollo’s [render prop API](https://blog.apollographql.com/introducing-react-apollo-2-1-c837cc23d926) to manage the data with a Query component.
 
-*pages/healthcheck.js*
+*pages/check.js*
 
 ~~~~
 const getHealthCheckQuery = gql`query HealthCheck($id: ID!) {
@@ -234,16 +234,11 @@ const HealthCheckCreator = () => {
     <>
       {
         id ? (
-          <h2>You created a new Health Check!</h2>
-            <div>
-              <p>You can share it with your friends by sharing this link:</p>
-              <input readonly type="text" value={window.location.href+'/healthcheck/'+id} /> 
-            </div>
-            <p>
-              <Link prefetch href={'/healthcheck/'+id}>
-                <a>View health check</a>
-              </Link>
-            </p>
+          <>
+            <p>You created a new Health Check!</p>
+            <Link href={'/healthcheck/'+id}>
+              <a>View health check</a>
+            </Link>
           </>
         ) : (
           <Mutation 
@@ -291,10 +286,6 @@ import HealthCheckCreator from '../components/HealthCheckCreator'
 export default () => (
   <App>
     <h1>Team Health Checker</h1>
-    <div>
-      <p>Health checks help you find out how your team is doing, and work together to improve.</p>
-      <p>This health check is based on <a href="https://labs.spotify.com/2014/09/16/squad-health-check-model/">Spotify’s Squad Health Check Model</a>.</p>
-    </div>
     <HealthCheckCreator />
   </App>
 )
@@ -312,7 +303,7 @@ We won’t worry about styling or a great user experience just yet, as this is j
 
 Let’s add a component that allows people to provide responses to each of the topics.
 
-*pages/healthcheck.js*
+*pages/check.js*
 
 ~~~~
 ...
@@ -643,25 +634,25 @@ const HealthCheckComplete = (props) => {
 
         let topicRatings = topicTitles.map(() => { return [0,0,0] })
         const responses = data.HealthCheck.responses.forEach((response) => {
-          response.ratings.forEach((rating, topicIndex) => {
-            topicRatings[topicIndex][rating]++
-          })
+     			response.ratings.forEach((rating, topicIndex) => {
+     				topicRatings[topicIndex][rating]++
+     			})
         })
 
         return (
           <>
-            <p>Complete! Here are the results:</p>
-            {
-              topicRatings.map((topic, topicIndex) => 
-                <div key={'topicRating'+topicIndex}>
-                  <h3>{topicTitles[topicIndex]}</h3>
-                  <p>Awesome: {topic[2]}</p>
-                  <p>OK: {topic[1]}</p>
-                  <p>Sucky: {topic[0]}</p>
-                  <p>Average: {topic[1] + (topic[2] * 2)/data.HealthCheck.responses.length}</p>
-                </div>
-              )
-            }
+          	<p>Complete! Here are the results:</p>
+          	{
+          		topicRatings.map((topic, topicIndex) => 
+          			<div key={'topicRating'+topicIndex}>
+          				<h3>{topicTitles[topicIndex]}</h3>
+          				<p>Awesome: {topic[2]}</p>
+          				<p>OK: {topic[1]}</p>
+          				<p>Sucky: {topic[0]}</p>
+          				<p>Average: {topic[1] + (topic[2] * 2)/data.HealthCheck.responses.length}</p>
+          			</div>
+          		)
+          	}
           </>
         )
       }}
@@ -808,11 +799,11 @@ import { Div, H1, P } from 'styled-system-html'
 
 export default () => (
   <App>
-    <Div textAlign="center" py={54}>
-      <H1 color="base" pt={4} pb={3} fontSize={8} fontWeight="400">Team Health Checker</H1>
-      <P pb={5} fontSize={3}>Health checks help you find out how your team is doing, and work together to improve.</P>
-      <HealthCheckCreator />
-  </Div>
+  	<Div textAlign="center" py={54}>
+	    <H1 color="base" pt={4} pb={3} fontSize={8} fontWeight="400">Team Health Checker</H1>
+	    <P pb={5} fontSize={3}>Health checks help you find out how your team is doing, and work together to improve.</P>
+	    <HealthCheckCreator />
+	</Div>
   </App>
 )
 ~~~~
@@ -896,3 +887,11 @@ With that done, in the command line we can run one command to deploy our project
 ~~~~
 $ now
 ~~~~
+
+
+
+
+
+
+
+
