@@ -1,14 +1,5 @@
-import PropTypes from 'prop-types'
-import { useState } from 'react'
-
-const HealthCheckResults = (props) => {
-
+export default (props) => {
   return (
-    <div>
-      <p>Results will go here.
-    </div>
+    <p>Thanks for taking health check {props.id}!</p>
   )
 }
-
-export default HealthCheckResults
-

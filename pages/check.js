@@ -1,6 +1,7 @@
 import React from 'react'
 import App from '../components/App'
 import HealthCheck from '../components/HealthCheck'
+import HealthCheckComplete from '../components/HealthCheckComplete'
 import { Query } from 'react-apollo'
 import gql from 'graphql-tag'
 
@@ -50,7 +51,7 @@ export default class extends React.Component {
                   console.log('COMPLETE!', data)
                   this.setState({view: this.views.COMPLETE})}} 
                 />,
-                COMPLETE: <p>Thanks for completing the health check!</p>
+                COMPLETE: <HealthCheckComplete id={this.props.id} />
               }[this.state.view]}
             </>
           )
