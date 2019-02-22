@@ -1,6 +1,7 @@
 {
   "name": "team-health-checker",
-  "version": "0.0.1",
+  "version": "0.1.0",
+  "description": "Help your team improve by taking a Team Health Check",
   "scripts": {
     "dev": "next",
     "build": "next build",
@@ -20,6 +21,20 @@
     "type": "git",
     "url": "https://github.com/rebassjs/rebass.git"
   },
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not ie <= 11",
+    "not op_mini all"
+  ],
   "author": "John Polacek",
-  "license": "ISC"
+  "license": "MIT",
+  "author": {
+    "name": "John Polacek",
+    "url": "https://github.com/johnpolacek/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/johnpolacek/team-health-checker.git"
+  }
 }
