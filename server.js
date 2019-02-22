@@ -8,7 +8,7 @@ const dev = process.env.NODE_ENV !== 'production'
 const app = next({ dev })
 const handle = app.getRequestHandler()
 const route = pathMatch()
-const match = route('/healthcheck/:id')
+const match = route('/check/:id')
 
 app.prepare()
   .then(() => {
@@ -19,10 +19,7 @@ app.prepare()
         handle(req, res)
         return
       }
-      // assigning `query` into the params means that we still
-      // get the query string passed to our application
-      // i.e. /healthcheck/foo?show-comments=true
-      app.render(req, res, '/healthcheck', Object.assign(params, query))
+      app.render(req, res, '/check', Object.assign(params, query))
     })
       .listen(port, (err) => {
         if (err) throw err
