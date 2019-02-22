@@ -613,11 +613,9 @@ export const createHealthCheckResponseMutation = gql`
 `
 ~~~~
 
-Now, for the HealthCheckComplete component, we will once again wrap the content in a Query component that will pass the GraphQL data to its children.
+Now, let’s make a HealthCheckResults component to display the results. We will once again wrap the content in a Query component that will pass the GraphQL data to its children. We can iterate through the responses and increment the values (Awesome/OK/Sucky) for each topic.
 
-To display the results, we can iterate through the responses and increment the values (Awesome/OK/Sucky) for each topic.
-
-*components/HealthCheckComplete.js*
+*components/HealthCheckResult.js*
 
 ~~~~
 import PropTypes from 'prop-types'
@@ -687,6 +685,27 @@ A key aspect of our GraphQL api is that the getHealthCheckQuery is cached, so wh
   awaitRefetchQueries={true}
 >  
 ...
+~~~~
+
+Let’s link to the results from our HealthCheckComplete component.
+
+*components/HealthCheckComplete.js*
+
+~~~~
+import Link from 'next/link'
+
+export default (props) => {
+  return (
+    <>
+      <p>Thanks for completing the health check!</p>
+      <p>
+        <Link prefetch href={'/results/'+props.id}>
+          <a>View health check</a>
+        </Link>
+      </p>
+    </>
+  )
+}
 ~~~~
 
 ##Part 5
