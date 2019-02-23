@@ -1,16 +1,10 @@
 import PropTypes from 'prop-types'
 import { useState } from 'react'
 import { Mutation } from 'react-apollo'
-import { createHealthCheckResponseMutation, getHealthCheckQuery, topicTitles } from '../api/operations'
+import { createHealthCheckResponseMutation, getHealthCheckQuery, topicTitles, ratingLabels } from '../api/operations'
 import HealthCheckTopic from './HealthCheckTopic'
 import HealthCheckIcon from './HealthCheckIcon'
 import { Div, H1, Span, Button } from 'styled-system-html'
-
-export const ratingLabels = {
-  0: 'Sucky',
-  1: 'OK',
-  2: 'Awesome'
-}
 
 const HealthCheck = (props) => {
 
@@ -77,4 +71,3 @@ HealthCheck.propTypes = {
 }
 
 export default HealthCheck
-

@@ -28,7 +28,7 @@ p{line-height:1.5;margin:0;}
 ul{margin-top:0;}
 select{padding:8px;}
 h1,h2,h3,h4,h5,h6,.h1,.h2,.h3,.h4,.h5,.h6{text-rendering:optimizelegibility;margin:0;}
-input,select,textarea,button{padding:4px;border:solid 2px #aed7ff;font-size:16px;font-family:'Nunito',sans-serif;}
+input,select,textarea,button{padding:4px;border:solid 2px #aed7ff;font-size:16px;font-family:`+theme.font+`,sans-serif;}
 select{-webkit-appearance:menulist;height:32px;}
 table{border-collapse:collapse;}
 input{text-align:inherit;padding-left:4px;}

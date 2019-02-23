@@ -111,15 +111,38 @@ Returning to the [Next.js examples](https://github.com/zeit/next.js/tree/master/
 
 Unfortunately, this will require us to use a custom server to be able to match the route to the id.
 
-First, we’ll need to install a new dependencies in our project.
+First, we’ll need to install next-routes in our project.
 
 ~~~~
-npm i path-match
+npm i next-routes
 ~~~~
 
-Next, let’s grab the `server.js` from the parameterized routing example and put it in the top level of our project directory. Open the file and do a find/replace to change 'blog' to 'healthcheck' to set up the correct routing.
+Next, let’s grab the `server.js` from the parameterized routing example and put it in the top level of our project directory. Instead of `path-match`, we will use `next-routes` to handle routing. You can see a basic example of that in the [with-next-routes Next.js example](https://github.com/zeit/next.js/tree/master/examples/with-next-routes).
 
-Likewise, copy the `blog.js` into our pages directory, rename it `healthcheck.js` and find/replace 'blog' to 'healthcheck'.
+*server.js*
+
+~~~~
+const { createServer } = require('http')
+const { parse } = require('url')
+const next = require('next')
+const nextRoutes = require('next-routes')
+const routes = (module.exports = nextRoutes())
+routes.add('check', '/check/:id')
+
+const port = parseInt(process.env.PORT, 10) || 3000
+const dev = process.env.NODE_ENV !== 'production'
+const app = next({ dev })
+const handler = routes.getRequestHandler(app)
+
+app.prepare().then(() => {
+  createServer(handler).listen(port, err => {
+    if (err) throw err
+    console.log(`> Ready on http://localhost:${port}`)
+  })
+})
+~~~~
+
+Likewise, copy the `blog.js` into our pages directory, rename it `check.js` and find/replace 'blog' to 'check'.
 
 Then, we need to update the build scripts in our `package.json` for our server configuration.
 
@@ -137,11 +160,11 @@ Let’s take a look at what we have so far.
 npm run dev
 ~~~~
 
-Go to `http://localhost:3000/healthcheck/123` and you should see the id from the url parameter output to the browser window.
+Go to `http://localhost:3000/check/123` and you should see the id from the url parameter output to the browser window.
 
 Next, we need to check that id from the url against the data in Graphcool. To do that, we’ll need to bring in some code from the previous page. Also, we will be doing a Query instead of a mutation, so change the react-apollo import to import that instead of Mutation.
 
-*pages/healthcheck.js*
+*pages/check.js*
 
 ~~~~
 import React from 'react'
@@ -168,7 +191,7 @@ export default class extends React.Component {
 
 Now let’s add a query to check whether id from the url is a valid HealthCheck id. This time, rather than calleing the query method on the `ApolloClient` directly, we will use Apollo’s [render prop API](https://blog.apollographql.com/introducing-react-apollo-2-1-c837cc23d926) to manage the data with a Query component.
 
-*pages/healthcheck.js*
+*pages/check.js*
 
 ~~~~
 const getHealthCheckQuery = gql`query HealthCheck($id: ID!) {
@@ -234,16 +257,11 @@ const HealthCheckCreator = () => {
     <>
       {
         id ? (
-          <h2>You created a new Health Check!</h2>
-            <div>
-              <p>You can share it with your friends by sharing this link:</p>
-              <input readonly type="text" value={window.location.href+'/healthcheck/'+id} /> 
-            </div>
-            <p>
-              <Link prefetch href={'/healthcheck/'+id}>
-                <a>View health check</a>
-              </Link>
-            </p>
+          <>
+            <p>You created a new Health Check!</p>
+            <Link href={'/healthcheck/'+id}>
+              <a>View health check</a>
+            </Link>
           </>
         ) : (
           <Mutation 
@@ -291,10 +309,6 @@ import HealthCheckCreator from '../components/HealthCheckCreator'
 export default () => (
   <App>
     <h1>Team Health Checker</h1>
-    <div>
-      <p>Health checks help you find out how your team is doing, and work together to improve.</p>
-      <p>This health check is based on <a href="https://labs.spotify.com/2014/09/16/squad-health-check-model/">Spotify’s Squad Health Check Model</a>.</p>
-    </div>
     <HealthCheckCreator />
   </App>
 )
@@ -304,7 +318,7 @@ Test it out and you after you click on the link, you should land on the health c
 
 To see the failure state, go to `http://localhost:3000/healthcheck/123` and there should be an error message that the health check with id 123 could not be found.
 
-##Part 3
+## Part 3
 
 For the next part of developing this app, we will allow people to fill in the health check responses.
 
@@ -312,7 +326,7 @@ We won’t worry about styling or a great user experience just yet, as this is j
 
 Let’s add a component that allows people to provide responses to each of the topics.
 
-*pages/healthcheck.js*
+*pages/check.js*
 
 ~~~~
 ...
@@ -386,9 +400,21 @@ Our HealthCheck component contains an array of topic titles, and an array of rat
 
 For each topic, the user will click a button which will add the rating to the array of ratings responses and go to the next topic. When they have provided ratings for all the topics, an `onComplete` function prop will be called.
 
-Next, we need to build in some views depending on where the user is in the health check process. Let’s add a button for the user to click to start the health check, and a results view for when the health check is complete.
+Let’s make a simple component to show a message when the health check is complete
 
-*pages/healthcheck.js*
+*components/HealthCheckComplete.js*
+
+~~~~
+export default (props) => {
+  return (
+    <p>Thanks for taking health check {props.id}!</p>
+  )
+}
+~~~~
+
+Next, we need to build in some views depending on where the user is in the health check process.
+
+*pages/check.js*
 
 ~~~~
 export default class extends React.Component {
@@ -425,10 +451,9 @@ export default class extends React.Component {
                   <button onClick={() => this.setState({view: this.views.IN_PROGRESS})}>Begin health check</button>
                 </>,
                 IN_PROGRESS: <HealthCheck onComplete={() => {
-                  console.log('COMPLETE!')
                   this.setState({view: this.views.COMPLETE})}} 
                 />,
-                COMPLETE: <p>Thanks for completing the health check!</p>
+                COMPLETE: <HealthCheckComplete id={this.props.id} />
               }[this.state.view]}
             </>
           )
@@ -454,21 +479,57 @@ Another way to write this could be with a switch statement or a series of simple
 {
   this.state.view == this.views.IN_PROGRESS &&
   <HealthCheck onComplete={() => {
-    console.log('COMPLETE!')
     this.setState({view: this.views.COMPLETE})}} 
   />
 }
 {
   this.state.view == this.views.COMPLETE &&
-  <p>Thanks for completing the health check!</p>
+  <HealthCheckComplete id={this.props.id} />
 }
 ~~~~
 
-##Part 4
+## Part 4
 
 In the last part, we created a component for a user to enter their responses to a health check, but we didn’t do anything with them. Now we need to store their answers in our GraphQL database and display them. 
 
 To achieve this, as we did when creating a new health check, we will be creating a mutation, in this case a nested create mutation (see the [Graphcool docs](https://www.graph.cool/docs/reference/graphql-api/mutation-api-ol0yuoz6go#nested-create-mutations)), to add the health check response and link it to the id of the health check.
+
+Rather than defining our queries and mutations within the various components, it makes sense to bring them all together in one file and import them in as needed. While we’re at it, let’s put `topicTitles` and `ratingLabels` in there as well since we’ll want to share that across our app.
+
+*api/operations.js*
+
+~~~~
+import gql from 'graphql-tag';
+
+export const topicTitles = ['Delivering Value','Easy to release','Fun','Health of Codebase','Learning','Mission','Pawns or Players','Speed','Suitable Process','Support','Teamwork']
+export const ratingLabels = {0: 'Sucky', 1: 'OK', 2: 'Awesome'}
+
+export const getHealthCheckQuery = gql`query HealthCheck($id: ID!) {
+  HealthCheck(id: $id) {
+    id
+    responses {
+      id
+      ratings
+    }
+  }
+}`
+
+export const createHealthCheckMutation = gql`
+  mutation createHealthCheck($responses: [HealthCheckresponsesHealthCheckResponse!]) {
+    createHealthCheck(responses: $responses) {
+      id
+    }
+  }
+`
+
+export const createHealthCheckResponseMutation = gql`
+  mutation createHealthCheckResponse($ratings: [Int!]!, $healthCheckId: ID!) {
+    createHealthCheckResponse(ratings: $ratings, healthCheckId: $healthCheckId) {
+      id
+    }
+  }
+`
+~~~~
 
 Update the health check component with a confirm step to send the completed response to the database.
 
@@ -478,15 +539,7 @@ Update the health check component with a confirm step to send the completed resp
 import PropTypes from 'prop-types'
 import { useState } from 'react'
 import { Mutation } from 'react-apollo'
-import gql from 'graphql-tag'
-
-const createHealthCheckResponseMutation = gql`
-  mutation createHealthCheckResponse($ratings: [Int!]!, $healthCheckId: ID!) {
-    createHealthCheckResponse(ratings: $ratings, healthCheckId: $healthCheckId) {
-      id
-    }
-  }
-`
+import { createHealthCheckResponseMutation, getHealthCheckQuery, topicTitles, ratingLabels } from '../api/operations'
 
 const HealthCheck = (props) => {
 
@@ -494,14 +547,7 @@ const HealthCheck = (props) => {
   const [ratings, setRatings] = useState([])
   const [loading, setLoading] = useState(false)
   
-  // const topicTitles = ['Easy to release','Suitable Process','Tech Quality','Value','Speed','Mission','Fun','Learning','Support','Pawns']
-  const topicTitles = ['Easy to release','Suitable Process']
   const currTopic = ratings.length
-  const ratingLabels = {
-    0: 'Sucky',
-    1: 'OK',
-    2: 'Awesome'
-  }
 
   const onChange = e => {
     setCurrRating(parseInt(e.target.value))
@@ -519,10 +565,15 @@ const HealthCheck = (props) => {
           <Mutation 
             mutation={createHealthCheckResponseMutation} 
             variables={{ ratings, healthCheckId: props.id }}
-            onCompleted={(data) => {
-              console.log('createHealthCheckResponseMutation onCompleted', data)
-              props.onComplete(ratings)
+            onCompleted={props.onComplete}
+            refetchQueries={() => {
+              console.log("refetchQueries")
+                return [{
+                    query: getHealthCheckQuery,
+                    variables: { id: props.id }
+                }]
             }}
+            awaitRefetchQueries={true}
           >
             {
               createMutation => {
@@ -580,59 +631,22 @@ HealthCheck.propTypes = {
 }
 
 export default HealthCheck
-
 ~~~~
 
-Next, we need a way to review all the health check responses and see the results of all the completed health checks. We will make a HealthCheckComplete component and again use a Query to pull the data from GraphQL.
+Next, we need a way to review all the health check responses and see the results of all the completed health checks. We will make a HealthCheckResults component and again use a Query to pull the data from GraphQL.
 
-Rather than defining our queries and mutations within the various components, it makes sense to bring them all together in one file and import them in as needed. While we’re at it, let’s put our `topicTitles` array in there as well since we’ll want to share that across our app.
-
-*api/operations.js*
-
-~~~~
-import gql from 'graphql-tag';
-
-export const topicTitles = ['Easy to release','Suitable Process','Tech Quality','Value','Speed','Mission','Fun','Learning','Support','Pawns']
-
-export const getHealthCheckQuery = gql`query HealthCheck($id: ID!) {
-  HealthCheck(id: $id) {
-    id
-    responses {
-      id
-      ratings
-    }
-  }
-}`
-
-export const createHealthCheckMutation = gql`
-  mutation createHealthCheck($responses: [HealthCheckresponsesHealthCheckResponse!]) {
-    createHealthCheck(responses: $responses) {
-      id
-    }
-  }
-`
-
-export const createHealthCheckResponseMutation = gql`
-  mutation createHealthCheckResponse($ratings: [Int!]!, $healthCheckId: ID!) {
-    createHealthCheckResponse(ratings: $ratings, healthCheckId: $healthCheckId) {
-      id
-    }
-  }
-`
-~~~~
-
-Now, for the HealthCheckComplete component, we will once again wrap the content in a Query component that will pass the GraphQL data to its children.
+Now, for the HealthCheckResults component, we will once again wrap the content in a Query component that will pass the GraphQL data to its children.
 
 To display the results, we can iterate through the responses and increment the values (Awesome/OK/Sucky) for each topic.
 
-*components/HealthCheckComplete.js*
+*components/HealthCheckResults.js*
 
 ~~~~
 import PropTypes from 'prop-types'
 import { Query } from 'react-apollo'
 import { getHealthCheckQuery, topicTitles } from '../api/operations'
 
-const HealthCheckComplete = (props) => {
+const HealthCheckResults = (props) => {
 
   return (
     <Query query={getHealthCheckQuery} variables={{id: props.id}}>
@@ -642,25 +656,25 @@ const HealthCheckComplete = (props) => {
 
         let topicRatings = topicTitles.map(() => { return [0,0,0] })
         const responses = data.HealthCheck.responses.forEach((response) => {
-          response.ratings.forEach((rating, topicIndex) => {
-            topicRatings[topicIndex][rating]++
-          })
+     			response.ratings.forEach((rating, topicIndex) => {
+     				topicRatings[topicIndex][rating]++
+     			})
         })
 
         return (
           <>
-            <p>Complete! Here are the results:</p>
-            {
-              topicRatings.map((topic, topicIndex) => 
-                <div key={'topicRating'+topicIndex}>
-                  <h3>{topicTitles[topicIndex]}</h3>
-                  <p>Awesome: {topic[2]}</p>
-                  <p>OK: {topic[1]}</p>
-                  <p>Sucky: {topic[0]}</p>
-                  <p>Average: {topic[1] + (topic[2] * 2)/data.HealthCheck.responses.length}</p>
-                </div>
-              )
-            }
+          	<p>Here are the results:</p>
+          	{
+          		topicRatings.map((topic, topicIndex) => 
+          			<div key={'topicRating'+topicIndex}>
+          				<h3>{topicTitles[topicIndex]}</h3>
+          				<p>Awesome: {topic[2]}</p>
+          				<p>OK: {topic[1]}</p>
+          				<p>Sucky: {topic[0]}</p>
+          				<p>Average: {topic[1] + (topic[2] * 2)/data.HealthCheck.responses.length}</p>
+          			</div>
+          		)
+          	}
           </>
         )
       }}
@@ -668,15 +682,26 @@ const HealthCheckComplete = (props) => {
   )
 }
 
-HealthCheckComplete.propTypes = {
+HealthCheckResults.propTypes = {
   id: PropTypes.string.isRequired
 }
 
-export default HealthCheckComplete
-
+export default HealthCheckResults
 ~~~~
 
-A key aspect of our GraphQL api is that the getHealthCheckQuery is cached, so when the onComplete event in our HealthCheck component fires, we need to tell it to refetch that query.
+We need to add a new route for the results page. 
+
+*server.js*
+
+~~~~
+...
+const routes = (module.exports = nextRoutes())
+routes.add('check', '/check/:id')
+routes.add('results', '/results/:id')
+...
+~~~~
+
+Lastly, the getHealthCheckQuery is cached, so when the onComplete event in our HealthCheck component fires, we need to tell it to refetch that query.
 
 *components/HealthCheck.js*
 
@@ -697,7 +722,7 @@ A key aspect of our GraphQL api is that the getHealthCheckQuery is cached, so wh
 ...
 ~~~~
 
-##Part 5
+## Part 5
 
 We have a basic working proof-of-concept for the Health Check web app. Now it is time to improve the design and make it more user-friendly.
 
@@ -809,11 +834,11 @@ import { Div, H1, P } from 'styled-system-html'
 
 export default () => (
   <App>
-    <Div textAlign="center" py={54}>
-      <H1 color="base" pt={4} pb={3} fontSize={8} fontWeight="400">Team Health Checker</H1>
-      <P pb={5} fontSize={3}>Health checks help you find out how your team is doing, and work together to improve.</P>
-      <HealthCheckCreator />
-  </Div>
+  	<Div textAlign="center" py={54}>
+	    <H1 color="base" pt={4} pb={3} fontSize={8} fontWeight="400">Team Health Checker</H1>
+	    <P pb={5} fontSize={3}>Health checks help you find out how your team is doing, and work together to improve.</P>
+	    <HealthCheckCreator />
+	</Div>
   </App>
 )
 ~~~~
@@ -1014,3 +1039,11 @@ With that done, in the command line we can run one command to deploy our project
 ~~~~
 $ now
 ~~~~
+
+
+
+
+
+
+
+
