@@ -494,6 +494,43 @@ In the last part, we created a component for a user to enter their responses to 
 
 To achieve this, as we did when creating a new health check, we will be creating a mutation, in this case a nested create mutation (see the [Graphcool docs](https://www.graph.cool/docs/reference/graphql-api/mutation-api-ol0yuoz6go#nested-create-mutations)), to add the health check response and link it to the id of the health check.
 
+Rather than defining our queries and mutations within the various components, it makes sense to bring them all together in one file and import them in as needed. While we’re at it, let’s put `topicTitles` and `ratingLabels` in there as well since we’ll want to share that across our app.
+
+*api/operations.js*
+
+~~~~
+import gql from 'graphql-tag';
+
+export const topicTitles = ['Delivering Value','Easy to release','Fun','Health of Codebase','Learning','Mission','Pawns or Players','Speed','Suitable Process','Support','Teamwork']
+export const ratingLabels = {0: 'Sucky', 1: 'OK', 2: 'Awesome'}
+
+export const getHealthCheckQuery = gql`query HealthCheck($id: ID!) {
+  HealthCheck(id: $id) {
+    id
+    responses {
+      id
+      ratings
+    }
+  }
+}`
+
+export const createHealthCheckMutation = gql`
+  mutation createHealthCheck($responses: [HealthCheckresponsesHealthCheckResponse!]) {
+    createHealthCheck(responses: $responses) {
+      id
+    }
+  }
+`
+
+export const createHealthCheckResponseMutation = gql`
+  mutation createHealthCheckResponse($ratings: [Int!]!, $healthCheckId: ID!) {
+    createHealthCheckResponse(ratings: $ratings, healthCheckId: $healthCheckId) {
+      id
+    }
+  }
+`
+~~~~
+
 Update the health check component with a confirm step to send the completed response to the database.
 
 *components/HealthCheck.js*
@@ -502,15 +539,7 @@ Update the health check component with a confirm step to send the completed resp
 import PropTypes from 'prop-types'
 import { useState } from 'react'
 import { Mutation } from 'react-apollo'
-import gql from 'graphql-tag'
-
-const createHealthCheckResponseMutation = gql`
-  mutation createHealthCheckResponse($ratings: [Int!]!, $healthCheckId: ID!) {
-    createHealthCheckResponse(ratings: $ratings, healthCheckId: $healthCheckId) {
-      id
-    }
-  }
-`
+import { createHealthCheckResponseMutation, getHealthCheckQuery, topicTitles, ratingLabels } from '../api/operations'
 
 const HealthCheck = (props) => {
 
@@ -519,14 +548,7 @@ const HealthCheck = (props) => {
   const [isDone, setIsDone] = useState(false)
   const [loading, setLoading] = useState(false)
   
-  // const topicTitles = ['Easy to release','Suitable Process','Tech Quality','Value','Speed','Mission','Fun','Learning','Support','Pawns']
-  const topicTitles = ['Easy to release','Suitable Process']
   const currTopic = ratings.length
-  const ratingLabels = {
-    0: 'Sucky',
-    1: 'OK',
-    2: 'Awesome'
-  }
 
   const onChange = e => {
     setCurrRating(parseInt(e.target.value))
@@ -544,10 +566,15 @@ const HealthCheck = (props) => {
           <Mutation 
             mutation={createHealthCheckResponseMutation} 
             variables={{ ratings, healthCheckId: props.id }}
-            onCompleted={(data) => {
-              console.log('createHealthCheckResponseMutation onCompleted', data)
-              props.onComplete(ratings)
+            onCompleted={props.onComplete}
+            refetchQueries={() => {
+              console.log("refetchQueries")
+                return [{
+                    query: getHealthCheckQuery,
+                    variables: { id: props.id }
+                }]
             }}
+            awaitRefetchQueries={true}
           >
             {
               createMutation => {
@@ -605,46 +632,9 @@ HealthCheck.propTypes = {
 }
 
 export default HealthCheck
-
 ~~~~
 
 Next, we need a way to review all the health check responses and see the results of all the completed health checks. We will make a HealthCheckResults component and again use a Query to pull the data from GraphQL.
-
-Rather than defining our queries and mutations within the various components, it makes sense to bring them all together in one file and import them in as needed. While we’re at it, let’s put our `topicTitles` array in there as well since we’ll want to share that across our app.
-
-*api/operations.js*
-
-~~~~
-import gql from 'graphql-tag';
-
-export const topicTitles = ['Easy to release','Suitable Process','Tech Quality','Value','Speed','Mission','Fun','Learning','Support','Pawns']
-
-export const getHealthCheckQuery = gql`query HealthCheck($id: ID!) {
-  HealthCheck(id: $id) {
-    id
-    responses {
-      id
-      ratings
-    }
-  }
-}`
-
-export const createHealthCheckMutation = gql`
-  mutation createHealthCheck($responses: [HealthCheckresponsesHealthCheckResponse!]) {
-    createHealthCheck(responses: $responses) {
-      id
-    }
-  }
-`
-
-export const createHealthCheckResponseMutation = gql`
-  mutation createHealthCheckResponse($ratings: [Int!]!, $healthCheckId: ID!) {
-    createHealthCheckResponse(ratings: $ratings, healthCheckId: $healthCheckId) {
-      id
-    }
-  }
-`
-~~~~
 
 Now, for the HealthCheckResults component, we will once again wrap the content in a Query component that will pass the GraphQL data to its children.
 
@@ -698,15 +688,19 @@ HealthCheckResults.propTypes = {
 }
 
 export default HealthCheckResults
-<<<<<<< HEAD
 ~~~~
 
-We need to add a new route for the results page. Let’s make a separate module for defining our routes. We’ll use `next-url-prettifier` to
+We need to add a new route for the results page. 
 
-*routes.js*
+*server.js*
 
 ~~~~
-
+...
+const routes = (module.exports = nextRoutes())
+routes.add('check', '/check/:id')
+routes.add('results', '/results/:id')
+...
+~~~~
 
 Lastly, the getHealthCheckQuery is cached, so when the onComplete event in our HealthCheck component fires, we need to tell it to refetch that query.
 

@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types'
 import { useState } from 'react'
 import { Mutation } from 'react-apollo'
-import { createHealthCheckResponseMutation, getHealthCheckQuery, topicTitles } from '../api/operations'
+import { createHealthCheckResponseMutation, getHealthCheckQuery, topicTitles, ratingLabels } from '../api/operations'
 
 const HealthCheck = (props) => {
 
@@ -11,11 +11,6 @@ const HealthCheck = (props) => {
   const [loading, setLoading] = useState(false)
   
   const currTopic = ratings.length
-  const ratingLabels = {
-    0: 'Sucky',
-    1: 'OK',
-    2: 'Awesome'
-  }
 
   const onChange = e => {
     setCurrRating(parseInt(e.target.value))
@@ -99,4 +94,3 @@ HealthCheck.propTypes = {
 }
 
 export default HealthCheck
-
