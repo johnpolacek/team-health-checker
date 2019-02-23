@@ -6,7 +6,7 @@ export default (props) => {
       <p>Thanks for completing the health check!</p>
       <p>
         <Link prefetch href={'/results/'+props.id}>
-          <a>View health check</a>
+          <a>View results</a>
         </Link>
       </p>
     </>

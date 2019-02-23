@@ -11,6 +11,7 @@
     "graphql": "^14.1.1",
     "isomorphic-unfetch": "^3.0.0",
     "next": "latest",
+    "next-routes": "^1.4.2",
     "path-match": "^1.2.4",
     "prop-types": "^15.6.2",
     "react": "^16.8.1",

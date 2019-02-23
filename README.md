@@ -295,7 +295,7 @@ Test it out and you after you click on the link, you should land on the health c
 
 To see the failure state, go to `http://localhost:3000/healthcheck/123` and there should be an error message that the health check with id 123 could not be found.
 
-##Part 3
+## Part 3
 
 For the next part of developing this app, we will allow people to fill in the health check responses.
 
@@ -389,7 +389,7 @@ export default (props) => {
 }
 ~~~~
 
-Next, we need to build in some views depending on where the user is in the health check process. Let’s add a button for the user to click to start the health check, and a results view for when the health check is complete.
+Next, we need to build in some views depending on where the user is in the health check process.
 
 *pages/check.js*
 
@@ -465,7 +465,7 @@ Another way to write this could be with a switch statement or a series of simple
 }
 ~~~~
 
-##Part 4
+## Part 4
 
 In the last part, we created a component for a user to enter their responses to a health check, but we didn’t do anything with them. Now we need to store their answers in our GraphQL database and display them. 
 
@@ -585,7 +585,7 @@ export default HealthCheck
 
 ~~~~
 
-Next, we need a way to review all the health check responses and see the results of all the completed health checks. We will make a HealthCheckComplete component and again use a Query to pull the data from GraphQL.
+Next, we need a way to review all the health check responses and see the results of all the completed health checks. We will make a HealthCheckResults component and again use a Query to pull the data from GraphQL.
 
 Rather than defining our queries and mutations within the various components, it makes sense to bring them all together in one file and import them in as needed. While we’re at it, let’s put our `topicTitles` array in there as well since we’ll want to share that across our app.
 
@@ -623,18 +623,18 @@ export const createHealthCheckResponseMutation = gql`
 `
 ~~~~
 
-Now, for the HealthCheckComplete component, we will once again wrap the content in a Query component that will pass the GraphQL data to its children.
+Now, for the HealthCheckResults component, we will once again wrap the content in a Query component that will pass the GraphQL data to its children.
 
 To display the results, we can iterate through the responses and increment the values (Awesome/OK/Sucky) for each topic.
 
-*components/HealthCheckComplete.js*
+*components/HealthCheckResults.js*
 
 ~~~~
 import PropTypes from 'prop-types'
 import { Query } from 'react-apollo'
 import { getHealthCheckQuery, topicTitles } from '../api/operations'
 
-const HealthCheckComplete = (props) => {
+const HealthCheckResults = (props) => {
 
   return (
     <Query query={getHealthCheckQuery} variables={{id: props.id}}>
@@ -651,7 +651,7 @@ const HealthCheckComplete = (props) => {
 
         return (
           <>
-          	<p>Complete! Here are the results:</p>
+          	<p>Here are the results:</p>
           	{
           		topicRatings.map((topic, topicIndex) => 
           			<div key={'topicRating'+topicIndex}>
@@ -670,15 +670,21 @@ const HealthCheckComplete = (props) => {
   )
 }
 
-HealthCheckComplete.propTypes = {
+HealthCheckResults.propTypes = {
   id: PropTypes.string.isRequired
 }
 
-export default HealthCheckComplete
+export default HealthCheckResults
+~~~~
+
+We need to add a new route for the results page. Let’s make a separate module for defining our routes. We’ll use `next-url-prettifier` to
+
+*routes.js*
 
 ~~~~
 
-A key aspect of our GraphQL api is that the getHealthCheckQuery is cached, so when the onComplete event in our HealthCheck component fires, we need to tell it to refetch that query.
+
+Lastly, the getHealthCheckQuery is cached, so when the onComplete event in our HealthCheck component fires, we need to tell it to refetch that query.
 
 *components/HealthCheck.js*
 
@@ -699,7 +705,7 @@ A key aspect of our GraphQL api is that the getHealthCheckQuery is cached, so wh
 ...
 ~~~~
 
-##Part 5
+## Part 5
 
 We have a basic working proof-of-concept for the Health Check web app. Now it is time to improve the design and make it more user-friendly.
 

@@ -2,12 +2,11 @@ import PropTypes from 'prop-types'
 import { Query } from 'react-apollo'
 import { getHealthCheckQuery, topicTitles } from '../api/operations'
 
-const HealthCheckComplete = (props) => {
+const HealthCheckResults = (props) => {
 
   return (
     <Query query={getHealthCheckQuery} variables={{id: props.id}}>
       {({ loading, error, data }) => {
-      	console.log('HealthCheckComplete data',data)
         if (loading) return <div>Loading...</div>
         if (error || !data.HealthCheck) return <div>Error: Could not load HealthCheck with id: {this.props.id}</div>
 
@@ -39,9 +38,9 @@ const HealthCheckComplete = (props) => {
   )
 }
 
-HealthCheckComplete.propTypes = {
+HealthCheckResults.propTypes = {
   id: PropTypes.string.isRequired
 }
 
-export default HealthCheckComplete
+export default HealthCheckResults
 
