@@ -1,5 +1,5 @@
 // Typography
-export const font = `-apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif`;
+export const font = `avenir next,avenir,Calibri,Candara,Segoe,Segoe UI,Optima,Arial,sans-serif`;
 export const monospace = `"SF Mono", "Roboto Mono", Menlo, monospace`
 export const fontSizes = [14,16,20,24,32,48,64,72,96]
 export const weights = [200,400,700]

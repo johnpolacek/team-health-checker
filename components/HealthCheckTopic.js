@@ -2,7 +2,8 @@ import PropTypes from 'prop-types'
 import { useState } from 'react'
 import Slider from 'react-rangeslider'
 import HealthCheckIcon from './HealthCheckIcon'
-import { Div, H2, Span, Input, Label, Button } from 'styled-system-html'
+import { Div, H2, Span, Input, Label } from 'styled-system-html'
+import Button from './Button'
 import { topicTitles } from '../api/operations'
 import { ratingLabels } from './HealthCheck'
 
@@ -24,9 +25,7 @@ const HealthCheckTopic = (props) => {
         </Div>
         <Slider min={0} max={2} tooltip={false} labels={{0:'Horrible',1:'OK',2:'Awesome'}} value={currRating} onChange={value => setCurrRating(value)} />
       </Div>
-      <Button 
-        bg={color} color="white" fontSize={4} py={3} px={4} my={4} borderRadius="8px"
-        onClick={() => {
+      <Button bg={color} my={4} onClick={() => {
           props.onConfirm(currRating)
           setCurrRating(1)
         }}

@@ -4,7 +4,8 @@ import { Mutation } from 'react-apollo'
 import { createHealthCheckResponseMutation, getHealthCheckQuery, topicTitles, ratingLabels } from '../api/operations'
 import HealthCheckTopic from './HealthCheckTopic'
 import HealthCheckIcon from './HealthCheckIcon'
-import { Div, H1, Span, Button } from 'styled-system-html'
+import Button from './Button.js'
+import { Div, H1, H2 } from 'styled-system-html'
 
 const HealthCheck = (props) => {
 
@@ -19,7 +20,7 @@ const HealthCheck = (props) => {
 
   return (
     <Div textAlign="center" py={4}>
-      <H1 color="base" pt={4} pb={3} fontSize={6} fontWeight="400">Team Health Check</H1>
+      <H1 color="base" pb={3} fontSize={5}>Team Health Check</H1>
       {
         ratings.length === topicTitles.length ? (
           <Mutation 
@@ -39,13 +40,24 @@ const HealthCheck = (props) => {
               createMutation => {
                 return (
                   <>
-                    {
-                      ratings.map((rating, i) => {
-                        return (<Div py={2} fontSize={3} key={topicTitles[i]}>{topicTitles[i]}: <Span display="inline-block" width={32} position="relative" top="9px"><HealthCheckIcon rating={rating} /></Span></Div>)
-                      })
-                    }
+                    <Div width={1100} mx="auto">
+                      {
+                        ratings.map((rating, i) => {
+                          const color = rating === 0 ? 'red' : rating === 1 ? 'gray5' : 'green'
+                          return (
+                            <Div width={240} display="inline-block" py={4} px={3} m={3} fontSize={3} key={'topicRating'+i} bg={color} borderRadius="8px" color="white">
+                              <Div width={36} mx="auto" pb={2}>
+                                <HealthCheckIcon fill="#fff" rating={rating} />
+                              </Div>
+                              <H2 fontSize={2}>{topicTitles[i]}</H2>
+                            </Div>
+                          )
+                        })
+                      }
+                    </Div>
                     <Button 
-                      bg="green" color="white" fontSize={4} py={3} px={4} my={4} borderRadius="8px"
+                      bg={loading ? 'gray' : 'green'} color="white" fontSize={4} py={3} px={4} my={4} borderRadius="8px"
+                      disabled={loading}
                       onClick={() => {
                         setLoading(true)
                         createMutation()

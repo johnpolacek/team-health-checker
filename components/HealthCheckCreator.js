@@ -14,15 +14,15 @@ const HealthCheckCreator = () => {
         id ? (
           <>
             <H2 color="green" pb={4} fontSize={5} fontWeight="600">You created a new Health Check!</H2>
-            <Div pb={4}>
-              <P pb={3} fontSize={3}>You can share it with your friends by sharing this link:</P>
-              <Input width={340} p={2} readonly type="text" value={window.location.href+'healthcheck/'+id} /> 
-            </Div>
-            <P py={4}>
+            <P py={3}>
               <Link prefetch href={'/healthcheck/'+id}>
-                <A href={'/healthcheck/'+id} bg="cyan" color="white" fontSize={4} py={3} px={4} borderRadius="8px" style={{textDecoration:'none'}}>Go To Health Check</A>
+                <A href={'/check/'+id} color="base" fontSize={4}>Go To Health Check</A>
               </Link>
             </P>
+            <Div py={4}>
+              <P pb={3} fontSize={3}>You can share it with your friends via this link:</P>
+              <Input width={340} p={2} readonly type="text" value={window.location.href+'healthcheck/'+id} /> 
+            </Div>
           </>
         ) : (
           <Mutation 
@@ -31,12 +31,15 @@ const HealthCheckCreator = () => {
           >
             {
               createMutation => <Button 
-                bg="green" color="white" 
+                disabled={loading}
+                bg={loading ? 'gray' : 'green'} color="white" 
                 fontSize={4} fontWeight="{2}"
                 py={3} px={4} borderRadius="8px"
                 onClick={() => {
-                  setLoading(true)
-                  createMutation()
+                  if (!loading) {
+                    setLoading(true)
+                    createMutation()
+                  }
                 }}
                 children = {loading ? 'Loading...' : 'Create New Health Check'}
               />

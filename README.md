@@ -726,46 +726,54 @@ Lastly, the getHealthCheckQuery is cached, so when the onComplete event in our H
 
 We have a basic working proof-of-concept for the Health Check web app. Now it is time to improve the design and make it more user-friendly.
 
-You don’t need to use CSS-in-JS to build React Apps, but styles are often closely tied to state at the component layer, so for that and other reasons, it is quite popular. Let’s do it!
+First, before we even get into the code, we can think about our design system. What typography do we need? What colors should we use?
 
-First off, let’s set up some theming configuration for colors, typography and spacing. To do this, we will use a [ThemeProvider component](https://www.styled-components.com/docs/advanced#theming) from [styled components](https://www.styled-components.com/)
+If we were a brand, we might want a webfont that would help differentiate us from others on the web. Since that is not the case, it seems like a good decision for performance reasons to use a [web safe CSS font stack](https://www.cssfontstack.com/). We can also define a type scale and weights to use in our app.
+
+When it comes to colors, this is an exercise for teams to take together so we should try to make it fun, so choosing some brighter colors is appropriate. Remember to choose a color palette that is accessibility - see [these 90 examples of A11Y compliant color combos](http://clrs.cc/a11y/)
+
+We can define all the named colors available to the theme (pink, blue, red, green, etc). We can create color ranges for each of the named colors from light to dark, and from those, we may wish to further abstract color references to those named colors (primary, secondary, warning, error, success, etc).
+
+Let’s define these aspects of our design theme in code so we can use them throughout our project.
+
+*src/theme.js*
 
 ~~~~
-$ npm i styled-components
-~~~~
-
-ThemeProvider doesn’t do much without a theme, so let’s set up some properties we can use to style all our UI components.
-
-*theme.js*
-
-~~~~
-export const font = `'avenir next', avenir, helvetica, arial, sans-serif`;
-export const monospace = `"SF Mono", "Roboto Mono", Menlo, monospace`
+// Typography
+export const font = `avenir next, avenir, helvetica, arial, sans-serif`;
 export const fontSizes = [12,14,16,20,24,32,48,64,72,96]
 export const weights = [200,400,700]
 
+// Colors
 export const colors = {
   "base": "#4169e1",
   "black": "#000",
   "blue": "#4169e1",
-  ....
+  ...
 }
 
+// for text on white background, or background colors behind white text
+export darkPalette = ['blue','orange','purple','cyan','pink']
+
+// layout
 export const breakpoints = ['32em','48em','64em','80em']
 export const space = [0,4,8,16,32,64,128]
-export const radius = 4
 
 export default {
   font,
-  monospace,
-  fontFamilies,
   weights,
   fontSizes,
   colors,
   breakpoints,
-  space,
-  radius
+  space
 }
+
+~~~~
+
+You don’t need to use CSS-in-JS to build React Apps, but styles are often closely tied to state at the component layer, so for that and other reasons, it is quite popular. Let’s do it!
+
+~~~~
+$ npm i styled-components
 ~~~~
 
 [Next.js](https://nextjs.org) has a [bare-bones example](https://github.com/zeit/next.js/tree/master/examples/with-styled-components) of using [styled-components](https://www.styled-components.com/) with server-side rendering so that we can ship a minimal amount of CSS on page load. 
@@ -779,6 +787,7 @@ We can also apply [normalize.css](https://necolas.github.io/normalize.css/) and 
 ~~~~
 import Document, { Head, Main, NextScript } from 'next/document'
 import { ServerStyleSheet } from 'styled-components'
+import theme from '../components/Theme.js'
 
 export default class MyDocument extends Document {
   static getInitialProps ({ renderPage }) {
@@ -788,12 +797,6 @@ export default class MyDocument extends Document {
     return { ...page, styleTags }
   }
 
-  // normalize.css v8.0.0 | github.com/necolas/normalize.css */
-  const headCSS = `/*! normalize.css v8.0.0 | MIT License | github.com/necolas/normalize.css */
-button,hr,input{overflow:visible}progress,sub,sup{vertical-align:baseline}[type=checkbox],[type=radio],legend{box-sizing:border-box;padding:0}html{line-height:1.15;-webkit-text-size-adjust:100%}body{margin:0}h1{font-size:2em;margin:.67em 0}hr{box-sizing:content-box;height:0}code,kbd,pre,samp{font-family:monospace,monospace;font-size:1em}a{background-color:transparent}abbr[title]{border-bottom:none;text-decoration:underline;text-decoration:underline dotted}b,strong{font-weight:bolder}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative}sub{bottom:-.25em}sup{top:-.5em}img{border-style:none}button,input,optgroup,select,textarea{font-family:inherit;font-size:100%;line-height:1.15;margin:0}button,select{text-transform:none}[type=button],[type=reset],[type=submit],button{-webkit-appearance:button}[type=button]::-moz-focus-inner,[type=reset]::-moz-focus-inner,[type=submit]::-moz-focus-inner,button::-moz-focus-inner{border-style:none;padding:0}[type=button]:-moz-focusring,[type=reset]:-moz-focusring,[type=submit]:-moz-focusring,button:-moz-focusring{outline:ButtonText dotted 1px}fieldset{padding:.35em .75em .625em}legend{color:inherit;display:table;max-width:100%;white-space:normal}textarea{overflow:auto}[type=number]::-webkit-inner-spin-button,[type=number]::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}[type=search]::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}details{display:block}summary{display:list-item}[hidden],template{display:none}
-html{box-sizing:border-box;} *,*:before,*:after{box-sizing:inherit;} 
-body{margin:0;font-family:'Nunito',sans-serif;line-height:1.6;overflow-x:hidden;}`
-
   render () {
     return (
       <html lang="en">
@@ -802,7 +805,23 @@ body{margin:0;font-family:'Nunito',sans-serif;line-height:1.6;overflow-x:hidden;
           <meta charSet="utf-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
           <meta name="theme-color" content="#000000" />
-          <style>{headCSS}</style>
+          <style>{`
+            button,hr,input{overflow:visible}progress,sub,sup{vertical-align:baseline}[type=checkbox],[type=radio],legend{box-sizing:border-box;padding:0}html{line-height:1.15;-webkit-text-size-adjust:100%}body{margin:0}h1{font-size:2em;margin:.67em 0}hr{box-sizing:content-box;height:0}code,kbd,pre,samp{font-family:monospace,monospace;font-size:1em}a{background-color:transparent}abbr[title]{border-bottom:none;text-decoration:underline;text-decoration:underline dotted}b,strong{font-weight:bolder}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative}sub{bottom:-.25em}sup{top:-.5em}img{border-style:none}button,input,optgroup,select,textarea{font-family:inherit;font-size:100%;line-height:1.15;margin:0}button,select{text-transform:none}[type=button],[type=reset],[type=submit],button{-webkit-appearance:button}[type=button]::-moz-focus-inner,[type=reset]::-moz-focus-inner,[type=submit]::-moz-focus-inner,button::-moz-focus-inner{border-style:none;padding:0}[type=button]:-moz-focusring,[type=reset]:-moz-focusring,[type=submit]:-moz-focusring,button:-moz-focusring{outline:ButtonText dotted 1px}fieldset{padding:.35em .75em .625em}legend{color:inherit;display:table;max-width:100%;white-space:normal}textarea{overflow:auto}[type=number]::-webkit-inner-spin-button,[type=number]::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}[type=search]::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}details{display:block}summary{display:list-item}[hidden],template{display:none}
+            html{box-sizing:border-box;} *,*:before,*:after{box-sizing:inherit;} 
+            body{margin:0;font-family:`+theme.font+`;font-weight:200;} 
+            button,input[type=submit]{cursor:pointer;}
+            p{line-height:1.5;margin:0;}
+            ul{margin-top:0;}
+            select{padding:8px;}
+            h1,h2,h3,h4,h5,h6,.h1,.h2,.h3,.h4,.h5,.h6{text-rendering:optimizelegibility;margin:0;font-weight:400;}
+            input,select,textarea,button{padding:4px;border:solid 2px #aed7ff;font-size:16px;font-family:`+theme.font+`,sans-serif;}
+            select{-webkit-appearance:menulist;height:32px;}
+            table{border-collapse:collapse;}
+            input{text-align:inherit;padding-left:4px;}
+            button, button:focus { outline: none; border: none; }
+            :focus:not(:focus-visible) { outline: none; }
+            .rangeslider{margin:20px 0;position:relative;background:#e6e6e6;-ms-touch-action:none;touch-action:none}.rangeslider,.rangeslider .rangeslider__fill{display:block;box-shadow:inset 0 1px 3px rgba(0,0,0,.4)}.rangeslider .rangeslider__handle{background:#fff;border:1px solid #ccc;cursor:pointer;display:inline-block;position:absolute;box-shadow:0 1px 3px rgba(0,0,0,.4),0 -1px 3px rgba(0,0,0,.4)}.rangeslider .rangeslider__handle .rangeslider__active{opacity:1}.rangeslider .rangeslider__handle-tooltip{width:40px;height:40px;text-align:center;position:absolute;background-color:rgba(0,0,0,.8);font-weight:400;font-size:14px;transition:all .1s ease-in;border-radius:4px;display:inline-block;color:#fff;left:50%;transform:translate3d(-50%,0,0)}.rangeslider .rangeslider__handle-tooltip span{margin-top:12px;display:inline-block;line-height:100%}.rangeslider .rangeslider__handle-tooltip:after{content:' ';position:absolute;width:0;height:0}.rangeslider-horizontal{height:12px;border-radius:10px}.rangeslider-horizontal .rangeslider__fill{height:100%;background-color:#f1f1f1;border-radius:10px;top:0}.rangeslider-horizontal .rangeslider__handle{width:30px;height:30px;border-radius:30px;top:50%;transform:translate3d(-50%,-50%,0)}.rangeslider-horizontal .rangeslider__handle:after{content:' ';position:absolute;width:16px;height:16px;top:6px;left:6px;border-radius:50%;background-color:#dadada;box-shadow:0 1px 3px rgba(0,0,0,.4) inset,0 -1px 3px rgba(0,0,0,.4) inset}.rangeslider-horizontal .rangeslider__handle-tooltip{top:-55px}.rangeslider-horizontal .rangeslider__handle-tooltip:after{border-left:8px solid transparent;border-right:8px solid transparent;border-top:8px solid rgba(0,0,0,.8);left:50%;bottom:-8px;transform:translate3d(-50%,0,0)}.rangeslider-vertical{margin:20px auto;height:150px;max-width:10px;background-color:transparent}.rangeslider-vertical .rangeslider__fill,.rangeslider-vertical .rangeslider__handle{position:absolute}.rangeslider-vertical .rangeslider__fill{width:100%;background-color:#f1f1f1;box-shadow:none;bottom:0}.rangeslider-vertical .rangeslider__handle{width:30px;height:10px;left:-10px;box-shadow:none}.rangeslider-vertical .rangeslider__handle-tooltip{left:-100%;top:50%;transform:translate3d(-50%,-50%,0)}.rangeslider-vertical .rangeslider__handle-tooltip:after{border-top:8px solid transparent;border-bottom:8px solid transparent;border-left:8px solid rgba(0,0,0,.8);left:100%;top:12px}.rangeslider-reverse.rangeslider-horizontal .rangeslider__fill{right:0}.rangeslider-reverse.rangeslider-vertical .rangeslider__fill{top:0;bottom:inherit}.rangeslider__labels{position:relative;margin-bottom:8px;}.rangeslider-vertical .rangeslider__labels{position:relative;list-style-type:none;margin:0 0 0 24px;padding:0;text-align:left;width:250px;height:100%;left:10px}.rangeslider-vertical .rangeslider__labels .rangeslider__label-item{position:absolute;transform:translate3d(0,-50%,0)}.rangeslider-vertical .rangeslider__labels .rangeslider__label-item::before{content:'';width:10px;height:2px;background:#000;position:absolute;left:-14px;top:50%;transform:translateY(-50%);z-index:-1}.rangeslider__labels .rangeslider__label-item{position:absolute;font-size:14px;cursor:pointer;display:inline-block;top:10px;transform:translate3d(-50%,0,0)}
+          `}</style>
           {this.props.styleTags}
         </Head>
         <body>
@@ -813,6 +832,34 @@ body{margin:0;font-family:'Nunito',sans-serif;line-height:1.6;overflow-x:hidden;
     )
   }
 }
+~~~~
+
+To style our components with our theme, we will use a [ThemeProvider component](https://www.styled-components.com/docs/advanced#theming) from [styled components](https://www.styled-components.com/). This works very similarly to our ApolloProvider wrapper component that provides access to the Apollo client to all its component children.
+
+*pages/_app.js*
+
+~~~~
+import App, {Container} from 'next/app'
+import React from 'react'
+import { ThemeProvider } from 'styled-components'
+import theme from '../components/Theme'
+import withApolloClient from '../lib/with-apollo-client'
+import { ApolloProvider } from 'react-apollo'
+
+class MyApp extends App {
+  render () {
+    const {Component, pageProps, apolloClient} = this.props
+    return <Container>
+    	<ThemeProvider theme={theme}>
+	      <ApolloProvider client={apolloClient}>
+	        <Component {...pageProps} />
+	      </ApolloProvider>
+	    </ThemeProvider>
+    </Container>
+  }
+}
+
+export default withApolloClient(MyApp)
 ~~~~
 
 [Styled System](https://jxnblk.com/styled-system/) is a library that provides responsive, theme-based style props for our React UI components. By default, it works with [styled components](https://styled-components.com), and we will be using a library called [Styled System HTML](https://johnpolacek.github.io/styled-system-html/) which gives us a set of low level html element components ready for stateful theming.
@@ -830,15 +877,20 @@ We can switch the html elements to our components which can accept style props a
 ~~~~
 import App from '../components/App'
 import HealthCheckCreator from '../components/HealthCheckCreator'
-import { Div, H1, P } from 'styled-system-html'
+import { Div, H1, P, A, Button } from 'styled-system-html'
+
+import Link from 'next/link'
 
 export default () => (
   <App>
-  	<Div textAlign="center" py={54}>
-	    <H1 color="base" pt={4} pb={3} fontSize={8} fontWeight="400">Team Health Checker</H1>
-	    <P pb={5} fontSize={3}>Health checks help you find out how your team is doing, and work together to improve.</P>
-	    <HealthCheckCreator />
-	</Div>
+  	<Div textAlign="center" py={4}>
+	    <H1 color="base" pt={4} pb={3} fontSize={8}>Team Health Checker</H1>
+	    <Div pt={3} pb={4} fontSize={3}>
+		    <P pb={3}>Health checks help you find out how your team is doing, and work together to improve.</P>
+		    <P pb={3}>This health check is based on <A color="cyan" href="https://labs.spotify.com/2014/09/16/squad-health-check-model/">Spotify’s Squad Health Check Model</A>.</P>
+		  </Div>
+      <HealthCheckCreator />
+	  </Div>
   </App>
 )
 ~~~~
@@ -862,15 +914,15 @@ const HealthCheckCreator = () => {
         id ? (
           <>
             <H2 color="green" pb={4} fontSize={5} fontWeight="600">You created a new Health Check!</H2>
-            <Div pb={4}>
-              <P pb={3} fontSize={3}>You can share it with your friends by sharing this link:</P>
-              <Input width={340} p={2} readonly type="text" value={window.location.href+'/healthcheck/'+id} /> 
-            </Div>
-            <P py={4}>
+            <P py={3}>
               <Link prefetch href={'/healthcheck/'+id}>
-                <A href={'/healthcheck/'+id} bg="cyan" color="white" fontSize={4} py={3} px={4} borderRadius="8px" style={{textDecoration:'none'}}>View Health Check</A>
+                <A href={'/check/'+id} color="base" fontSize={4}>Go To Health Check</A>
               </Link>
             </P>
+            <Div py={4}>
+              <P pb={3} fontSize={3}>You can share it with your friends via this link:</P>
+              <Input width={340} p={2} readonly type="text" value={window.location.href+'healthcheck/'+id} /> 
+            </Div>
           </>
         ) : (
           <Mutation 
@@ -879,12 +931,15 @@ const HealthCheckCreator = () => {
           >
             {
               createMutation => <Button 
-                bg="green" color="white" 
+                disabled={loading}
+                bg={loading ? 'gray' : 'green'} color="white" 
                 fontSize={4} fontWeight="{2}"
                 py={3} px={4} borderRadius="8px"
                 onClick={() => {
-                  setLoading(true)
-                  createMutation()
+                  if (!loading) {
+                    setLoading(true)
+                    createMutation()
+                  }
                 }}
                 children = {loading ? 'Loading...' : 'Create New Health Check'}
               />
@@ -899,26 +954,48 @@ const HealthCheckCreator = () => {
 export default HealthCheckCreator
 ~~~~
 
+In every project, there comes a time when you need to create a Button component. Now is that time.
+
+*src/components/Button.js*
+
+~~~~
+import React from 'react'
+import {Button as Btn} from 'styled-system-html'
+
+export default (props) => (
+	<Btn
+	    fontSize={4}
+	    m={0}
+	    py={3}
+	    px={4}
+	    color='white'
+	    bg='blue'
+	    border={0}
+	    borderRadius="8px"
+		{...props}
+	/>
+)
+~~~~
+
 Next up, let’s create a new component for the beginning of the health check to make it more friendly to anyone that lands on the link shared with them.
 
 *components/HealthCheckBegin.js*
 
 ~~~~
 import PropTypes from 'prop-types'
-import { Div, H1, P, A, Button } from  'styled-system-html'
+import { Div, H1, P, A } from  'styled-system-html'
+import Button from './Button'
 
 const HealthCheckBegin = (props) => {
 
   return (
     <Div textAlign="center" py={4}>
-      <H1 color="base" pt={4} pb={3} fontSize={8} fontWeight="400">Begin Team Health Check</H1>
+      <H1 color="base" pt={4} pb={3} fontSize={6}>Begin Team Health Check</H1>
       <Div pt={3} pb={4} fontSize={3}>
         <P pb={3}>Health checks help you find out how your team is doing, and work together to improve.</P>
         <P pb={3}>This health check is based on <A target="block" color="cyan" href="https://labs.spotify.com/2014/09/16/squad-health-check-model/">Spotify’s Squad Health Check Model</A>.</P>
       </Div>
-      <Button bg="green" color="white" fontSize={4} fontWeight="{2}"py={3} px={4} borderRadius="8px" onClick={props.onBegin}>
-        Begin Health Check
-      </Button>
+      <Button bg="green" onClick={props.onBegin}>Begin Health Check</Button>
     </Div>
   )
 }
@@ -930,9 +1007,9 @@ HealthCheckBegin.propTypes = {
 export default HealthCheckBegin
 ~~~~
 
-Let’s import our new `HealthCheckBegin` into component our healthcheck page and render it in the `READY` state.
+Let’s import our new `HealthCheckBegin` into component  and render it in the `READY` state.
 
-*pages/healtcheck.js*
+*pages/check.js*
 
 ~~~~
 ...
@@ -950,15 +1027,241 @@ return (
 
 Now onto the health check itself. Let’s make a HealthCheckTopic component for collecting the responses.
 
+The health check topics themselves give us an opportunity to have a little more fun with the design. For the control input to give the rating, we can use React Rangeslider. 
+
+~~~~
+npm i react-range-slider
+~~~~
+
+The React Rangeslider component comes with some css. Be sure add that to the global styles in `_pages/_document.js`, along with normalize and some base styles.
+
+For some graphics, we can use some svg icons to indicate the rating. [Font Awesome](https://fontawesome.com/) is a great resource for free vector icons and social logos.
+
+*src/components/HealthCheckIcon.js*
+
+~~~~
+import PropTypes from 'prop-types'
+import { colors } from './Theme'
+
+const HealthCheckIcon = (props) => {
+
+  return (
+    <>
+      {{
+        0: <svg fill={colors.red} alt="frowny face" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path d="M248 8C111 8 0 119 0 256s111 248 248 248 248-111 248-248S385 8 248 8zm0 448c-110.3 0-200-89.7-200-200S137.7 56 248 56s200 89.7 200 200-89.7 200-200 200zm-80-216c17.7 0 32-14.3 32-32s-14.3-32-32-32-32 14.3-32 32 14.3 32 32 32zm160-64c-17.7 0-32 14.3-32 32s14.3 32 32 32 32-14.3 32-32-14.3-32-32-32zm-80 128c-40.2 0-78 17.7-103.8 48.6-8.5 10.2-7.1 25.3 3.1 33.8 10.2 8.4 25.3 7.1 33.8-3.1 16.6-19.9 41-31.4 66.9-31.4s50.3 11.4 66.9 31.4c8.1 9.7 23.1 11.9 33.8 3.1 10.2-8.5 11.5-23.6 3.1-33.8C326 321.7 288.2 304 248 304z"/></svg>,
+        1: <svg fill={colors.gray} alt="meh face" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path d="M248 8C111 8 0 119 0 256s111 248 248 248 248-111 248-248S385 8 248 8zm0 448c-110.3 0-200-89.7-200-200S137.7 56 248 56s200 89.7 200 200-89.7 200-200 200zm-80-216c17.7 0 32-14.3 32-32s-14.3-32-32-32-32 14.3-32 32 14.3 32 32 32zm160-64c-17.7 0-32 14.3-32 32s14.3 32 32 32 32-14.3 32-32-14.3-32-32-32zm8 144H160c-13.2 0-24 10.8-24 24s10.8 24 24 24h176c13.2 0 24-10.8 24-24s-10.8-24-24-24z"/></svg>,
+        2: <svg fill={colors.green} alt="happy" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path d="M248 8C111 8 0 119 0 256s111 248 248 248 248-111 248-248S385 8 248 8zm0 448c-110.3 0-200-89.7-200-200S137.7 56 248 56s200 89.7 200 200-89.7 200-200 200zm-80-216c17.7 0 32-14.3 32-32s-14.3-32-32-32-32 14.3-32 32 14.3 32 32 32zm160 0c17.7 0 32-14.3 32-32s-14.3-32-32-32-32 14.3-32 32 14.3 32 32 32zm4 72.6c-20.8 25-51.5 39.4-84 39.4s-63.2-14.3-84-39.4c-8.5-10.2-23.7-11.5-33.8-3.1-10.2 8.5-11.5 23.6-3.1 33.8 30 36 74.1 56.6 120.9 56.6s90.9-20.6 120.9-56.6c8.5-10.2 7.1-25.3-3.1-33.8-10.1-8.4-25.3-7.1-33.8 3.1z"/></svg>
+      }[props.rating]}
+    </>
+  )
+}
+
+HealthCheckIcon.propTypes = {
+  rating: PropTypes.oneOf([0,1,2]).isRequired
+}
+
+export default HealthCheckIcon
+~~~~
+
+Now we can use the range slider, icons and system html element components.
+
 *components/HealthCheckTopic.js*
 
 ~~~~
+import PropTypes from 'prop-types'
+import { useState } from 'react'
+import Slider from 'react-rangeslider'
+import HealthCheckIcon from './HealthCheckIcon'
+import { Div, H2, Span, Input, Label } from 'styled-system-html'
+import Button from './Button'
+import { topicTitles } from '../api/operations'
+import { ratingLabels } from './HealthCheck'
 
+const HealthCheckTopic = (props) => {
+
+  const [currRating, setCurrRating] = useState(1)
+  const colors = ['orange','purple','cyan','pink']
+  const color = colors[props.index % colors.length]
+  
+  return (
+    <Div px={4} py={3} border="4px solid" borderColor={color} borderRadius="8px" mx="auto" mt={4} style={{maxWidth:'640px'}}>
+      <Div borderBottom="1px solid" borderColor={color} color={color} py={3} mb={3} display="flex" flexWrap="wrap">
+        <H2 textAlign="left" fontSize={4} fontWeight="400" width={1/2} color={color}>{props.title}</H2>
+        <Div textAlign="right" fontSize={4} fontWeight="400" width={1/2} color={color}>{props.index+1} / {topicTitles.length}</Div>
+      </Div>
+      <Div pb={4}>
+        <Div width={props.width || 180} mx="auto" textAlign="center">
+          <HealthCheckIcon rating={currRating} />
+        </Div>
+        <Slider min={0} max={2} tooltip={false} labels={{0:'Horrible',1:'OK',2:'Awesome'}} value={currRating} onChange={value => setCurrRating(value)} />
+      </Div>
+      <Button bg={color} my={4} onClick={() => {
+          props.onConfirm(currRating)
+          setCurrRating(1)
+        }}
+        children="Next"
+      />
+    </Div>
+  )
+}
+
+HealthCheckTopic.propTypes = {
+  title: PropTypes.string.isRequired,
+  onConfirm: PropTypes.func.isRequired
+}
+
+export default HealthCheckTopic
 ~~~~
 
+Next, we can update the HealthCheck component which contains both the topics and the confirmation step.
 
+*components/HealthCheck.js*
 
-https://uxplanet.org/4-creative-concepts-of-slider-control-1f8839b05943
+~~~~
+...
+  return (
+    <Div textAlign="center" py={4}>
+      <H1 color="base" pb={3} fontSize={5}>Team Health Check</H1>
+      {
+        ratings.length === topicTitles.length ? (
+          <Mutation 
+            mutation={createHealthCheckResponseMutation} 
+            variables={{ ratings, healthCheckId: props.id }}
+            onCompleted={props.onComplete}
+            refetchQueries={() => {
+              console.log("refetchQueries")
+                return [{
+                    query: getHealthCheckQuery,
+                    variables: { id: props.id }
+                }]
+            }}
+            awaitRefetchQueries={true}
+          >
+            {
+              createMutation => {
+                return (
+                  <>
+                    <Div width={1100} mx="auto">
+                      {
+                        ratings.map((rating, i) => {
+                          const color = rating === 0 ? 'red' : rating === 1 ? 'gray5' : 'green'
+                          return (
+                            <Div width={240} display="inline-block" py={4} px={3} m={3} fontSize={3} key={'topicRating'+i} bg={color} borderRadius="8px" color="white">
+                              <Div width={36} mx="auto" pb={2}>
+                                <HealthCheckIcon fill="#fff" rating={rating} />
+                              </Div>
+                              <H2 fontSize={2}>{topicTitles[i]}</H2>
+                            </Div>
+                          )
+                        })
+                      }
+                    </Div>
+                    <Button 
+                      bg={loading ? 'gray' : 'green'} color="white" fontSize={4} py={3} px={4} my={4} borderRadius="8px"
+                      disabled={loading}
+                      onClick={() => {
+                        setLoading(true)
+                        createMutation()
+                      }}
+                      children = {loading ? 'Saving...' : 'Confirm'}
+                    />
+                  </>
+                )
+              }
+            }
+          </Mutation>
+        ) : (
+          <HealthCheckTopic title={topicTitles[currTopic]} onConfirm={onConfirmRating} index={ratings.length} />
+        )
+      }
+    </Div>
+  )
+}
+...
+~~~~
+
+Let’s update our HealthCheckComplete component as well.
+
+*components/HealthCheckComplete.js*
+
+~~~~
+import { Div, H2, P, A } from 'styled-system-html'
+import Link from 'next/link'
+
+export default (props) => {
+  return (
+    <Div textAlign="center" py={5}>
+      <H2 color="base" py={5} fontSize={6}>Thanks for completing the health check!</H2>
+      <P>
+        <Link prefetch href={'/results/'+props.id}>
+          <A href={'/healthcheck/'+props.id} bg="cyan" color="white" fontSize={4} py={3} px={4} borderRadius="8px" style={{textDecoration:'none'}}>View results</A>
+        </Link>
+      </P>
+    </Div>
+  )
+}
+~~~~
+
+The last component to update is `HealthCheckResults`.
+
+*components/HealthCheckResults.js*
+
+~~~~
+import PropTypes from 'prop-types'
+import { Query } from 'react-apollo'
+import { getHealthCheckQuery, topicTitles } from '../api/operations'
+import { Div, H1, H2, P, Span } from 'styled-system-html'
+import HealthCheckIcon from '../components/HealthCheckIcon'
+
+const HealthCheckResults = (props) => (
+  <Query query={getHealthCheckQuery} variables={{id: props.id}}>
+    {({ loading, error, data }) => {
+      if (loading) return <div>Loading...</div>
+      if (error || !data.HealthCheck) return <div>Error: Could not load HealthCheck with id: {this.props.id}</div>
+
+      let topicRatings = topicTitles.map(() => { return [0,0,0] })
+      const responses = data.HealthCheck.responses.forEach((response) => {
+   			response.ratings.forEach((rating, topicIndex) => {
+   				topicRatings[topicIndex][rating]++
+   			})
+      })
+
+      return (
+        <Div textAlign="center" py={5}>
+          <H1 color="base" pb={3} fontSize={6} fontWeight="400">Health Check Complete!</H1>
+          <P fontSize={3} pb={4}>{data.HealthCheck.responses.length} responses so far. Here are the results...</P>
+          {
+            topicRatings.map((topic, topicIndex) => {
+              const rating = Math.round((topic[1] + (topic[2] * 2))/data.HealthCheck.responses.length)
+              const color = rating === 0 ? 'red' : rating === 1 ? 'gray5' : 'green'
+              return (
+                <Div display="inline-block" p={3} m={3} fontSize={4} key={'topicRating'+topicIndex} bg={color} borderRadius="8px" color="white">
+                  <Div width={48} mx="auto">
+                    <HealthCheckIcon fill="#fff" rating={rating} />
+                  </Div>
+                  <H2 width={240} mx="auto" borderBottom="solid 1px" pb={3} px={4} mb={3} borderColor="#fff" fontSize={1} fontWeight="bold">{topicTitles[topicIndex]}</H2>
+                  <Div fontSize={2}>
+                    <P>Awesome: {topic[2]}</P>
+                    <P>OK: {topic[1]}</P>
+                    <P>Sucky: {topic[0]}</P>
+                  </Div>
+                  <P py={2} fontSize={1} fontStyle="italic">( avg <Span fontSize={0}>{((topic[1] + (topic[2] * 2))/data.HealthCheck.responses.length).toFixed(2)}</Span> )</P>
+                </Div>
+              )
+            })
+          }
+        </Div>
+      )
+    }}
+  </Query>
+)
+
+HealthCheckResults.propTypes = {
+  id: PropTypes.string.isRequired
+}
+
+export default HealthCheckResults
+~~~~
 
 http://blog.crisp.se/wp-content/uploads/2014/02/Team-barometer-self-evaluation-tool-Cards.pdf
 https://blog.crisp.se/2014/01/30/jimmyjanlen/team-barometer-self-evaluation-tool
@@ -1024,7 +1327,6 @@ Then we create a now config file to point at our next config file and use the ne
 }
 ~~~~
 
-At the time of this writing, we have a dependency on next.js version 8 canary. It is likely by the time you read this, 8.0.0 will have been released, and no changes to `package.json` will be necessary. If not, update the version of next: 
 
 *package.json*
 
