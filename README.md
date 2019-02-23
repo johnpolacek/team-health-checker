@@ -111,13 +111,36 @@ Returning to the [Next.js examples](https://github.com/zeit/next.js/tree/master/
 
 Unfortunately, this will require us to use a custom server to be able to match the route to the id.
 
-First, we’ll need to install a new dependencies in our project.
+First, we’ll need to install next-routes in our project.
 
 ~~~~
-npm i path-match
+npm i next-routes
 ~~~~
 
-Next, let’s grab the `server.js` from the parameterized routing example and put it in the top level of our project directory. Open the file and do a find/replace to change 'blog' to 'healthcheck' to set up the correct routing.
+Next, let’s grab the `server.js` from the parameterized routing example and put it in the top level of our project directory. Instead of `path-match`, we will use `next-routes` to handle routing. You can see a basic example of that in the [with-next-routes Next.js example](https://github.com/zeit/next.js/tree/master/examples/with-next-routes).
+
+*server.js*
+
+~~~~
+const { createServer } = require('http')
+const { parse } = require('url')
+const next = require('next')
+const nextRoutes = require('next-routes')
+const routes = (module.exports = nextRoutes())
+routes.add('check', '/check/:id')
+
+const port = parseInt(process.env.PORT, 10) || 3000
+const dev = process.env.NODE_ENV !== 'production'
+const app = next({ dev })
+const handler = routes.getRequestHandler(app)
+
+app.prepare().then(() => {
+  createServer(handler).listen(port, err => {
+    if (err) throw err
+    console.log(`> Ready on http://localhost:${port}`)
+  })
+})
+~~~~
 
 Likewise, copy the `blog.js` into our pages directory, rename it `check.js` and find/replace 'blog' to 'check'.
 
@@ -675,6 +698,7 @@ HealthCheckResults.propTypes = {
 }
 
 export default HealthCheckResults
+<<<<<<< HEAD
 ~~~~
 
 We need to add a new route for the results page. Let’s make a separate module for defining our routes. We’ll use `next-url-prettifier` to
