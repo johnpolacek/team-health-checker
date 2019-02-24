@@ -20,7 +20,7 @@ const HealthCheck = (props) => {
 
   return (
     <Div textAlign="center" py={4}>
-      <H1 color="base" pb={3} fontSize={5}>Team Health Check</H1>
+      <H1 color="base" pb={3} fontSize={[4,5]}>Team Health Check</H1>
       {
         ratings.length === topicTitles.length ? (
           <Mutation 
@@ -40,16 +40,18 @@ const HealthCheck = (props) => {
               createMutation => {
                 return (
                   <>
-                    <Div width={1100} mx="auto">
+                    <Div width={[1,1,1,1,1100]} mx="auto" px={[2,3]}>
                       {
                         ratings.map((rating, i) => {
                           const color = rating === 0 ? 'red' : rating === 1 ? 'gray5' : 'green'
                           return (
-                            <Div width={240} display="inline-block" py={4} px={3} m={3} fontSize={3} key={'topicRating'+i} bg={color} borderRadius="8px" color="white">
-                              <Div width={36} mx="auto" pb={2}>
-                                <HealthCheckIcon fill="#fff" rating={rating} />
+                            <Div display="inline-block" px={[1,2,2]} py={['2px',2,2]}>
+                              <Div width={[100,120,200,240]} py={[3,3,3,4]} px={[1,2,3]} fontSize={[1,3]} key={'topicRating'+i} bg={color} borderRadius="8px" color="white" style={{overflow:'hidden'}}>
+                                <Div width={[24,36]} mx="auto" pb={[0,0,2]}>
+                                  <HealthCheckIcon fill="#fff" rating={rating} />
+                                </Div>
+                                <H2 height={[30,30,'auto']} fontSize={[0,1,2]}>{topicTitles[i]}</H2>
                               </Div>
-                              <H2 fontSize={2}>{topicTitles[i]}</H2>
                             </Div>
                           )
                         })

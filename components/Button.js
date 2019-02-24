@@ -3,7 +3,7 @@ import {Button as Btn} from 'styled-system-html'
 
 export default (props) => (
 	<Btn
-	    fontSize={4}
+	    fontSize={[2,3,4]}
 	    m={0}
 	    py={3}
 	    px={4}
