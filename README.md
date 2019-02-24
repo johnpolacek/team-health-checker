@@ -1263,32 +1263,22 @@ HealthCheckResults.propTypes = {
 export default HealthCheckResults
 ~~~~
 
-http://blog.crisp.se/wp-content/uploads/2014/02/Team-barometer-self-evaluation-tool-Cards.pdf
-https://blog.crisp.se/2014/01/30/jimmyjanlen/team-barometer-self-evaluation-tool
-
-https://medium.com/the-liberators/agile-teams-dont-use-happiness-metrics-measure-team-morale-3050b339d8af
-
-https://www.atlassian.com/team-playbook/health-monitor/project-teams
-
-https://sidlee.com/en/?ref=bestwebsite.gallery
-https://wellset.co/home
-https://www.sysdoc.com/
-https://futurecomes.com/
-https://rallyinteractive.com/
-http://thrivesolo.com/
-https://econsultancy.com/21-first-class-examples-of-effective-web-form-design/
-
 ## Part 6
 
 Dang. When I built this thing it was for my team to do together with all our laptops open, either in a room together or remote. So, I did not take a ‘mobile first’ design approach when building this app.
 
 Luckily, Styled System makes it really easy to adapt a site for any screen size.
 
+
+
 ## Part 7
 
 Now that we have a working prototype of our app, we should add testing. 
 
 Some schools of thought would say that should have been step #1, but I have found that when you are still in the creative, figuring-it-out stage, it can be best to build a stable version first, with minimal features, then add the testing, especially before the project gets too big.
+
+Mobile testing
+https://docs.cypress.io/api/commands/viewport.html#Syntax
 
 ## Part 8
 
@@ -1349,3 +1339,17 @@ $ now
 
 
 
+http://blog.crisp.se/wp-content/uploads/2014/02/Team-barometer-self-evaluation-tool-Cards.pdf
+https://blog.crisp.se/2014/01/30/jimmyjanlen/team-barometer-self-evaluation-tool
+
+https://medium.com/the-liberators/agile-teams-dont-use-happiness-metrics-measure-team-morale-3050b339d8af
+
+https://www.atlassian.com/team-playbook/health-monitor/project-teams
+
+https://sidlee.com/en/?ref=bestwebsite.gallery
+https://wellset.co/home
+https://www.sysdoc.com/
+https://futurecomes.com/
+https://rallyinteractive.com/
+http://thrivesolo.com/
+https://econsultancy.com/21-first-class-examples-of-effective-web-form-design/
