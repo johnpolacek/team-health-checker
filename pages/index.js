@@ -1,41 +1,16 @@
 import App from '../components/App'
-import { ApolloConsumer } from 'react-apollo'
-import gql from 'graphql-tag'
+import HealthCheckCreator from '../components/HealthCheckCreator'
+import HealthCheckIntro from '../components/HealthCheckIntro'
+import { Div, H1 } from 'styled-system-html'
+
+import Link from 'next/link'
 
 export default () => (
   <App>
-    <h1>Team Health Checker</h1>
-    <ApolloConsumer>
-      {client => (
-        <button onClick={() => {onClickCreate(client)}}>Create New Health Check</button>
-      )}
-    </ApolloConsumer>
+  	<Div textAlign="center" px={4} py={[0,0,4]}>
+	    <H1 color="base" pt={4} pb={3} fontSize={[5,6,7,8]}>Team Health Checker</H1>
+	    <HealthCheckIntro />
+      	<HealthCheckCreator />
+	  </Div>
   </App>
 )
-
-function onClickCreate(client) {
-  client.mutate({
-    mutation: gql`
-      mutation createHealthCheck($responses: [HealthCheckresponsesHealthCheckResponse!]) {
-        createHealthCheck(responses: $responses) {
-          id
-          responses {
-            q1
-            q2
-            q3
-            q4
-            q5
-            q6
-            q7
-            q8
-            q9
-            q10
-            q11
-          }
-        }
-      }
-    `
-  }).then(({ data }) => {
-    console.log('got data', data);
-  })
-}
