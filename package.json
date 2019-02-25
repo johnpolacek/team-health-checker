@@ -1,10 +1,7 @@
 {
   "name": "team-health-checker",
   "version": "0.1.0",
-<<<<<<< HEAD
   "description": "Help your team improve by taking a Team Health Check",
-=======
->>>>>>> part5
   "scripts": {
     "dev": "node server.js",
     "build": "next build",
