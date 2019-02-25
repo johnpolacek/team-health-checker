@@ -18,9 +18,9 @@ const HealthCheckResults = (props) => (
       })
 
       return (
-        <Div textAlign="center" py={5} mb={5}>
-          <H1 color="base" pb={3} fontSize={6} fontWeight="400">Health Check Complete!</H1>
-          <P fontSize={3} pb={4}>{data.HealthCheck.responses.length} responses so far. Here are the results...</P>
+        <Div textAlign="center" py={[4,5]} mb={[4,5]}>
+          <H1 color="base" pb={3} fontSize={[5,6]} fontWeight="400">Team Health Check Results</H1>
+          <P fontSize={[2,3]} pb={[3,4]}>{data.HealthCheck.responses.length} responses so far. Here are the results...</P>
           {
             topicRatings.map((topic, topicIndex) => {
               const rating = Math.round((topic[1] + (topic[2] * 2))/data.HealthCheck.responses.length)
