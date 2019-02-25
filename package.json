@@ -1,6 +1,6 @@
 {
   "name": "team-health-checker",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "scripts": {
     "dev": "next",
     "build": "next build",
@@ -21,5 +21,5 @@
     "url": "https://github.com/rebassjs/rebass.git"
   },
   "author": "John Polacek",
-  "license": "ISC"
+  "license": "MIT"
 }
