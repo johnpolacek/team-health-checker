@@ -1,4 +1,4 @@
-# Building a Free Open Source Team Health Check Web App with React, Next.js, GraphQL
+# Team Health Check Web App with React, Next.js, Apollo and Styled Components
 
 ## Part 1
 
@@ -875,23 +875,36 @@ We can switch the html elements to our components which can accept style props a
 *pages/index.js*
 
 ~~~~
-import App from '../components/App'
-import HealthCheckCreator from '../components/HealthCheckCreator'
-import { Div, H1, P, A, Button } from 'styled-system-html'
+import PropTypes from 'prop-types'
+import { Div, H1, P, A } from  'styled-system-html'
+import Button from './Button'
+import HealthCheckIntro from './HealthCheckIntro'
 
-import Link from 'next/link'
+const HealthCheckBegin = (props) => (
+  <Div textAlign="center" py={[3,4]} px={3}>
+    <H1 color="base" pt={4} pb={3} fontSize={[5,6]}>Begin Team Health&nbsp;Check</H1>
+    <HealthCheckIntro />
+    <Button bg="green" onClick={props.onBegin}>Begin Health Check</Button>
+  </Div>
+)
+
+HealthCheckBegin.propTypes = {
+  onBegin: PropTypes.func.isRequired
+}
+
+export default HealthCheckBegin
+~~~~
+
+*components/HealthCheckIntro.js*
+
+~~~~
+import { Div, P, A } from 'styled-system-html'
 
 export default () => (
-  <App>
-  	<Div textAlign="center" py={4}>
-	    <H1 color="base" pt={4} pb={3} fontSize={8}>Team Health Checker</H1>
-	    <Div pt={3} pb={4} fontSize={3}>
-		    <P pb={3}>Health checks help you find out how your team is doing, and work together to improve.</P>
-		    <P pb={3}>This health check is based on <A color="cyan" href="https://labs.spotify.com/2014/09/16/squad-health-check-model/">Spotify’s Squad Health Check Model</A>.</P>
-		  </Div>
-      <HealthCheckCreator />
-	  </Div>
-  </App>
+	<Div px={3} pt={3} pb={4} fontSize={[2,2,3]}>
+    <P pb={3}>Health checks help you find out how your team is doing, and work together to improve.</P>
+    <P pb={3}>This health check is based on <A color="cyan" href="https://labs.spotify.com/2014/09/16/squad-health-check-model/" style={{whiteSpace:'nowrap'}}>Spotify’s Squad Health Check Model</A>.</P>
+  </Div>
 )
 ~~~~
 
@@ -1263,15 +1276,39 @@ HealthCheckResults.propTypes = {
 export default HealthCheckResults
 ~~~~
 
+#### Responsive Style Props
+
+Styled System makes it really easy to apply responsive styles to our components. We can change our styling properties to use an array syntax to apply different values across the breakpoints defined in our theme.
+
+For example, in our `HealthCheckBegin` component, we can adjust the padding of the container element and font size of the heading to be smaller at the smallest breakpoint.
+
+*components/HealthCheckBegin*
+
+~~~~
+import PropTypes from 'prop-types'
+import { Div, H1, P, A } from  'styled-system-html'
+import Button from './Button'
+import HealthCheckIntro from './HealthCheckIntro'
+
+const HealthCheckBegin = (props) => (
+  <Div textAlign="center" py={[3,4]} px={3}>
+    <H1 color="base" pt={4} pb={3} fontSize={[5,6]}>Begin Team Health Check</H1>
+    <HealthCheckIntro />
+    <Button bg="green" onClick={props.onBegin}>Begin Health Check</Button>
+  </Div>
+)
+
+HealthCheckBegin.propTypes = {
+  onBegin: PropTypes.func.isRequired
+}
+
+export default HealthCheckBegin
+~~~~
+
+With hot reload running in a browser window, and a text editor in another, it is really quick and simple to make these adjustments across all the views in our app.
+
+
 ## Part 6
-
-Dang. When I built this thing it was for my team to do together with all our laptops open, either in a room together or remote. So, I did not take a ‘mobile first’ design approach when building this app.
-
-Luckily, Styled System makes it really easy to adapt a site for any screen size.
-
-
-
-## Part 7
 
 Now that we have a working prototype of our app, we should add testing. 
 
