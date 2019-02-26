@@ -107,29 +107,33 @@ To better understand how it all works, check out:
 
 Now that we can create a health check, we need to be able to share a url with our team and collect their responses. We can use the health check’s id to create a route.
 
-Returning to the [Next.js examples](https://github.com/zeit/next.js/tree/master/examples/), we can find one for [parameterized routing](https://github.com/zeit/next.js/tree/master/examples/parameterized-routing).
+With version 8 of Next.js, we can now deploy a serverless Next.js application using custom Now routes. For more info, refer to the guide for [Custom Serverless Next.js Routing](https://zeit.co/guides/custom-next-js-server-to-routes/)
 
-Unfortunately, this will require us to use a custom server to be able to match the route to the id.
+Per the documentation, we will set up a `now.json` config file, that specifies we are using version 2 of now, sets up a route for our health check page with a path maps to an id param and tells now how to build the app.
 
-First, we’ll need to install a new dependencies in our project.
-
-~~~~
-npm i path-match
-~~~~
-
-Next, let’s grab the `server.js` from the parameterized routing example and put it in the top level of our project directory. Open the file and do a find/replace to change 'blog' to 'healthcheck' to set up the correct routing.
-
-Likewise, copy the `blog.js` into our pages directory, rename it `healthcheck.js` and find/replace 'blog' to 'healthcheck'.
-
-Then, we need to update the build scripts in our `package.json` for our server configuration.
+*now.json*
 
 ~~~~
-"scripts": {
-  "dev": "node server.js",
-  "build": "next build",
-  "start": "NODE_ENV=production node server.js"
-},
+{
+  "version": 2,
+  "routes": [
+    { "src": "/check/(?<id>[^/]+)$", "dest": "/check?id=$id" }
+  ],
+  "builds": [{ "src": "package.json", "use": "@now/next" }]
+}
 ~~~~
+
+Next, we add a next config to specify that we will be doing a serverless deployment.
+
+*next.config.js*
+
+~~~~
+module.exports = {
+  target: 'serverless'
+}
+~~~~
+
+
 
 Let’s take a look at what we have so far.
 

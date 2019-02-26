@@ -1,0 +1,7 @@
+{
+  "version": 2,
+  "routes": [
+    { "src": "/check/(?<id>[^/]+)$", "dest": "/check?id=$id" }
+  ],
+  "builds": [{ "src": "package.json", "use": "@now/next" }]
+}
