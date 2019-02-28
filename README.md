@@ -125,41 +125,33 @@ To better understand how it all works, check out:
 
 Now that we can create a health check, we need to be able to share a url with our team and collect their responses. We can use the health check’s id to create a route.
 
-Returning to the [Next.js examples](https://github.com/zeit/next.js/tree/master/examples/), we can find one for [parameterized routing](https://github.com/zeit/next.js/tree/master/examples/parameterized-routing).
+[Now](https://zeit.co/now) is a serverless deployment service from [Zeit](https://zeit.co), the makers of Next.js. We will be using Now 2.0 to configure out routes.
 
-Unfortunately, this will require us to use a custom server to be able to match the route to the id.
+Define a new route at `/check/:id` in a now.json config file.
 
-First, we’ll need to install a new dependencies in our project.
-
-~~~~
-npm i path-match
-~~~~
-
-Next, let’s grab the `server.js` from the parameterized routing example and put it in the top level of our project directory. Open the file and do a find/replace to change 'blog' to 'healthcheck' to set up the correct routing.
-
-Likewise, copy the `blog.js` into our pages directory, rename it `healthcheck.js` and find/replace 'blog' to 'healthcheck'.
-
-Then, we need to update the build scripts in our `package.json` for our server configuration.
+*now.json*
 
 ~~~~
-"scripts": {
-  "dev": "node server.js",
-  "build": "next build",
-  "start": "NODE_ENV=production node server.js"
-},
+{
+  "version": 2,
+  "routes": [
+    { "src": "/check/(?<id>[^/]+)$", "dest": "/check?id=$id" }
+  ],
+  "builds": [{ "src": "package.json", "use": "@now/next" }]
+}
 ~~~~
 
-Let’s take a look at what we have so far.
+Let’s see what we have so far.
 
 ~~~~
 npm run dev
 ~~~~
 
-Go to `http://localhost:3000/healthcheck/123` and you should see the id from the url parameter output to the browser window.
+Go to `http://localhost:3000/check/123` and you should see the id from the url parameter output to the browser window.
 
 Next, we need to check that id from the url against the data in Graphcool. To do that, we’ll need to bring in some code from the previous page. Also, we will be doing a Query instead of a mutation, so change the react-apollo import to import that instead of Mutation.
 
-*pages/healthcheck.js*
+*pages/check.js*
 
 ~~~~
 import React from 'react'
@@ -905,7 +897,6 @@ With that done, in the command line we can run one command to deploy our project
 ~~~~
 $ now
 ~~~~
-
 
 
 
