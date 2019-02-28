@@ -1,16 +1,34 @@
-# Building a Free Open Source Team Health Check Web App with React, Next.js, GraphQL
+# Building a Team Health Check Web App with React, Apollo, Next.js and Cypress
+
 
 ## Part 1
 
-Even though I am primarily a front end developer, I find that for any project, starting from a data schema first approach is a good one. 
+### What are we building?
 
-Starting point from [Next.js examples](https://github.com/zeit/next.js/tree/master/examples/with-apollo)
+#### Spotify Health Check
+- Facillitate round table discussion that can improve your team.
+- Example listen to Rabbit Hole podcast
+- Analog is great for in-office, what about remote?
+
+### SSR Web Apps 
+
+The ability to build isomorphic (~aka universal) web apps is that the same React and JS code can run on the client and the server. 
+
+The benefit here is that you can get a fast page load on that first visit, where, just like on a traditional server-side web architecutre, server sends just what is needed to the client, the initial minified render of the page, inlining critical styles and the app bundle. From there the client takes over, providing the faster rendering experience you can get from a single-page app.
+
+#### Next.js
+
+With Next.js, for each route in the app, we load the necessary data for its inital component tree and render the page server-side to send to the browser, and then our client-side React app will get its initial state and handle the rest from there.
+
+### Apollo and GraphQL
+
+To get started, we can create a new Next app from the [Next.js with-apollo example](https://github.com/zeit/next.js/tree/master/examples/with-apollo).
 
 ~~~~
 npx create-next-app --example with-apollo with-apollo-app
 ~~~~
 
-First, we set up the data. The example uses [graph.cool](https://graph.cool) so let’s use that to make our own.
+First, let’s set up our data. Our Next.js example uses [graph.cool](https://graph.cool) so let’s use that to make our own.
 
 Initialize graphcool into an api directory:
 
