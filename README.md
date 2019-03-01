@@ -210,36 +210,13 @@ now dev
 
 Go to `http://localhost:3000/check/123` and you should see the id from the url parameter output to the browser window.
 
-Next, we need to check that id from the url against the data in Graphcool. To do that, we’ll need to bring in some code from the previous page. Also, we will be doing a Query instead of a mutation, so change the react-apollo import to import that instead of Mutation.
+Next, we need to check that id from the url against the data in Graphcool. 
+
+To do that, we’ll need to bring in some code from the previous page. Also, we will be doing a Query instead of a mutation.
+
+The query will check whether id from the url is a valid HealthCheck id. This time, rather than calling the query method on the `ApolloClient` directly, we will use Apollo’s [render prop API](https://blog.apollographql.com/introducing-react-apollo-2-1-c837cc23d926) to manage the data with a Query component.
 
 *pages/check.js*
-
-~~~~
-import React from 'react'
-import App from '../components/App'
-import { Query } from 'react-apollo'
-import gql from 'graphql-tag'
-
-export default class extends React.Component {
-  static getInitialProps ({ query: { id } }) {
-    return { id }
-  }
-
-  render () {
-    return <App>
-      <ApolloConsumer>
-        {client => (
-          <h1>My {this.props.id} healthcheck</h1>
-        )}
-      </ApolloConsumer>
-    </App>
-  }
-}
-~~~~
-
-Now let’s add a query to check whether id from the url is a valid HealthCheck id. This time, rather than calleing the query method on the `ApolloClient` directly, we will use Apollo’s [render prop API](https://blog.apollographql.com/introducing-react-apollo-2-1-c837cc23d926) to manage the data with a Query component.
-
-*pages/healthcheck.js*
 
 ~~~~
 const getHealthCheckQuery = gql`query HealthCheck($id: ID!) {
@@ -297,7 +274,7 @@ const CREATEHEALTHCHECK_MUTATION = gql`
   }
 `
 
-const HealthCheckCreator = () => {
+const HealthCheckCreator = (props) => {
   const [id, setId] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -306,10 +283,16 @@ const HealthCheckCreator = () => {
       {
         id ? (
           <>
-            <p>You created a new Health Check!</p>
-            <Link href={'/healthcheck/'+id}>
-              <a>View health check</a>
-            </Link>
+            <h2>You created a new Health Check!</h2>
+            <div>
+              <p>You can share it with your friends by sharing this link:</p>
+              <input readonly type="text" value={window.location.href+'/check/'+id} /> 
+            </div>
+            <p>
+              <Link prefetch href={'/check/?id='+id}>
+                <a>View health check</a>
+              </Link>
+            </p>
           </>
         ) : (
           <Mutation 
@@ -351,12 +334,20 @@ Now we can use our HealthCheckCreator component and clean up `index.js` a bit.
 *index.js*
 
 ~~~~
+import Head from 'next/head'
 import App from '../components/App'
 import HealthCheckCreator from '../components/HealthCheckCreator'
 
 export default () => (
   <App>
+    <Head>
+      <title>Team Health Checker</title>
+    </Head>
     <h1>Team Health Checker</h1>
+    <div>
+      <p>Health checks help you find out how your team is doing, and work together to improve.</p>
+      <p>This health check is based on <a href="https://labs.spotify.com/2014/09/16/squad-health-check-model/">Spotify’s Squad Health Check Model</a>.</p>
+    </div>
     <HealthCheckCreator />
   </App>
 )
