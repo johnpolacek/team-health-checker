@@ -1,34 +1,16 @@
-# Building a Team Health Check Web App with React, Apollo, Next.js and Cypress
-
+# Building a Free Open Source Team Health Check Web App with React, Next.js, GraphQL
 
 ## Part 1
 
-### What are we building?
+Even though I am primarily a front end developer, I find that for any project, starting from a data schema first approach is a good one. 
 
-#### Spotify Health Check
-- Facillitate round table discussion that can improve your team.
-- Example listen to Rabbit Hole podcast
-- Analog is great for in-office, what about remote?
-
-### SSR Web Apps 
-
-The ability to build isomorphic (~aka universal) web apps is that the same React and JS code can run on the client and the server. 
-
-The benefit here is that you can get a fast page load on that first visit, where, just like on a traditional server-side web architecutre, server sends just what is needed to the client, the initial minified render of the page, inlining critical styles and the app bundle. From there the client takes over, providing the faster rendering experience you can get from a single-page app.
-
-#### Next.js
-
-With Next.js, for each route in the app, we load the necessary data for its inital component tree and render the page server-side to send to the browser, and then our client-side React app will get its initial state and handle the rest from there.
-
-### Apollo and GraphQL
-
-To get started, we can create a new Next app from the [Next.js with-apollo example](https://github.com/zeit/next.js/tree/master/examples/with-apollo).
+Starting point from [Next.js examples](https://github.com/zeit/next.js/tree/master/examples/with-apollo)
 
 ~~~~
 npx create-next-app --example with-apollo with-apollo-app
 ~~~~
 
-First, let’s set up our data. Our Next.js example uses [graph.cool](https://graph.cool) so let’s use that to make our own.
+First, we set up the data. The example uses [graph.cool](https://graph.cool) so let’s use that to make our own.
 
 Initialize graphcool into an api directory:
 
@@ -64,32 +46,6 @@ graphcool deploy
 Take note of the Simple API GraphQL Endpoint, we will need that. Open `lib/init-apollo.js` and replace the server uri with the Simple API endpoint we just created when we deployed to graphcool.
 
 This will break all the requests coming from the example app since we are now pointing at the new schema we just created.
-
-One key thing at work in the example is that our App component is actually wrapped in a [higher-order component (HOC)](https://reactjs.org/docs/higher-order-components.html).
-
-> Using the HOC pattern we’re able to pass down a central store of query result data created by Apollo into our React component hierarchy defined inside each page of our Next application. - read more at [The idea behind the example](https://github.com/zeit/next.js/tree/master/examples/with-apollo)
-
-*pages/_app.js*
-
-~~~~
-import App, {Container} from 'next/app'
-import React from 'react'
-import withApolloClient from '../lib/with-apollo-client'
-import { ApolloProvider } from 'react-apollo'
-
-class MyApp extends App {
-  render () {
-    const {Component, pageProps, apolloClient} = this.props
-    return <Container>
-      <ApolloProvider client={apolloClient}>
-        <Component {...pageProps} />
-      </ApolloProvider>
-    </Container>
-  }
-}
-
-export default withApolloClient(MyApp)
-~~~~
 
 Now, let’s get into the React code. Returning to the next.js example, we can see some of the components are already using some GraphQL mutations.
 
@@ -151,70 +107,89 @@ To better understand how it all works, check out:
 
 Now that we can create a health check, we need to be able to share a url with our team and collect their responses. We can use the health check’s id to create a route.
 
-[Now](https://zeit.co/now) is a serverless deployment service from [Zeit](https://zeit.co), the makers of Next.js. We will be using Now 2.0 to configure our routes - see their [Guide to Custom Serverless Next.js Routing](https://zeit.co/guides/custom-next-js-server-to-routes/).
+Returning to the [Next.js examples](https://github.com/zeit/next.js/tree/master/examples/), we can find one for [parameterized routing](https://github.com/zeit/next.js/tree/master/examples/parameterized-routing).
 
-Define a new route at `/check/:id` in a now.json config file, and specify that our build step will use `@now/next`.
+Unfortunately, this will require us to use a custom server to be able to match the route to the id.
 
-*now.json*
-
-~~~~
-{
-  "version": 2,
-  "routes": [
-    { "src": "/check/(?<id>[^/]+)$", "dest": "/check?id=$id" }
-  ],
-  "builds": [{ "src": "package.json", "use": "@now/next" }]
-}
-~~~~
-
-Let’s set up a basic page to test our route.
-
-*pages/check.js*
+First, we’ll need to install next-routes in our project.
 
 ~~~~
-import App from '../components/App'
-
-const HealthCheck = ({ id }) => (
-  <App>
-    <h1>Loaded HealthCheck id: {id}</h1>
-  </App>
-)
-HealthCheck.getInitialProps = async ({ query }) => {
-  return { id: query.id }
-}
-export default HealthCheck
+npm i next-routes
 ~~~~
 
-Then, we will update `package.json` with a new build command for now.
+Next, let’s grab the `server.js` from the parameterized routing example and put it in the top level of our project directory. Instead of `path-match`, we will use `next-routes` to handle routing. You can see a basic example of that in the [with-next-routes Next.js example](https://github.com/zeit/next.js/tree/master/examples/with-next-routes).
 
-*package.json*
+*server.js*
+
+~~~~
+const { createServer } = require('http')
+const { parse } = require('url')
+const next = require('next')
+const nextRoutes = require('next-routes')
+const routes = (module.exports = nextRoutes())
+routes.add('check', '/check/:id')
+
+const port = parseInt(process.env.PORT, 10) || 3000
+const dev = process.env.NODE_ENV !== 'production'
+const app = next({ dev })
+const handler = routes.getRequestHandler(app)
+
+app.prepare().then(() => {
+  createServer(handler).listen(port, err => {
+    if (err) throw err
+    console.log(`> Ready on http://localhost:${port}`)
+  })
+})
+~~~~
+
+Likewise, copy the `blog.js` into our pages directory, rename it `check.js` and find/replace 'blog' to 'check'.
+
+Then, we need to update the build scripts in our `package.json` for our server configuration.
 
 ~~~~
 "scripts": {
-  "dev": "next",
+  "dev": "node server.js",
   "build": "next build",
-  "now-build": "next build"
+  "start": "NODE_ENV=production node server.js"
 },
 ~~~~
 
-Let’s see what we have so far.
-
-
-
-NEED THIS:
-https://github.com/zeit/now-cli/pull/1883
+Let’s take a look at what we have so far.
 
 ~~~~
-now dev
+npm run dev
 ~~~~
 
 Go to `http://localhost:3000/check/123` and you should see the id from the url parameter output to the browser window.
 
-Next, we need to check that id from the url against the data in Graphcool. 
+Next, we need to check that id from the url against the data in Graphcool. To do that, we’ll need to bring in some code from the previous page. Also, we will be doing a Query instead of a mutation, so change the react-apollo import to import that instead of Mutation.
 
-To do that, we’ll need to bring in some code from the previous page. Also, we will be doing a Query instead of a mutation.
+*pages/check.js*
 
-The query will check whether id from the url is a valid HealthCheck id. This time, rather than calling the query method on the `ApolloClient` directly, we will use Apollo’s [render prop API](https://blog.apollographql.com/introducing-react-apollo-2-1-c837cc23d926) to manage the data with a Query component.
+~~~~
+import React from 'react'
+import App from '../components/App'
+import { Query } from 'react-apollo'
+import gql from 'graphql-tag'
+
+export default class extends React.Component {
+  static getInitialProps ({ query: { id } }) {
+    return { id }
+  }
+
+  render () {
+    return <App>
+      <ApolloConsumer>
+        {client => (
+          <h1>My {this.props.id} healthcheck</h1>
+        )}
+      </ApolloConsumer>
+    </App>
+  }
+}
+~~~~
+
+Now let’s add a query to check whether id from the url is a valid HealthCheck id. This time, rather than calleing the query method on the `ApolloClient` directly, we will use Apollo’s [render prop API](https://blog.apollographql.com/introducing-react-apollo-2-1-c837cc23d926) to manage the data with a Query component.
 
 *pages/check.js*
 
@@ -274,7 +249,7 @@ const CREATEHEALTHCHECK_MUTATION = gql`
   }
 `
 
-const HealthCheckCreator = (props) => {
+const HealthCheckCreator = () => {
   const [id, setId] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -283,16 +258,10 @@ const HealthCheckCreator = (props) => {
       {
         id ? (
           <>
-            <h2>You created a new Health Check!</h2>
-            <div>
-              <p>You can share it with your friends by sharing this link:</p>
-              <input readonly type="text" value={window.location.href+'/check/'+id} /> 
-            </div>
-            <p>
-              <Link prefetch href={'/check/?id='+id}>
-                <a>View health check</a>
-              </Link>
-            </p>
+            <p>You created a new Health Check!</p>
+            <Link href={'/healthcheck/'+id}>
+              <a>View health check</a>
+            </Link>
           </>
         ) : (
           <Mutation 
@@ -334,20 +303,12 @@ Now we can use our HealthCheckCreator component and clean up `index.js` a bit.
 *index.js*
 
 ~~~~
-import Head from 'next/head'
 import App from '../components/App'
 import HealthCheckCreator from '../components/HealthCheckCreator'
 
 export default () => (
   <App>
-    <Head>
-      <title>Team Health Checker</title>
-    </Head>
     <h1>Team Health Checker</h1>
-    <div>
-      <p>Health checks help you find out how your team is doing, and work together to improve.</p>
-      <p>This health check is based on <a href="https://labs.spotify.com/2014/09/16/squad-health-check-model/">Spotify’s Squad Health Check Model</a>.</p>
-    </div>
     <HealthCheckCreator />
   </App>
 )
@@ -357,7 +318,7 @@ Test it out and you after you click on the link, you should land on the health c
 
 To see the failure state, go to `http://localhost:3000/healthcheck/123` and there should be an error message that the health check with id 123 could not be found.
 
-##Part 3
+## Part 3
 
 For the next part of developing this app, we will allow people to fill in the health check responses.
 
@@ -365,7 +326,7 @@ We won’t worry about styling or a great user experience just yet, as this is j
 
 Let’s add a component that allows people to provide responses to each of the topics.
 
-*pages/healthcheck.js*
+*pages/check.js*
 
 ~~~~
 ...
@@ -439,57 +400,81 @@ Our HealthCheck component contains an array of topic titles, and an array of rat
 
 For each topic, the user will click a button which will add the rating to the array of ratings responses and go to the next topic. When they have provided ratings for all the topics, an `onComplete` function prop will be called.
 
-Next, we need to build in some views depending on where the user is in the health check process. Let’s add a button for the user to click to start the health check, and a results view for when the health check is complete.
+Let’s make a simple component to show a message when the health check is complete
 
-*pages/healthcheck.js*
+*components/HealthCheckComplete.js*
 
 ~~~~
-export default class extends React.Component {
+export default (props) => {
+  return (
+    <p>Thanks for taking health check {props.id}!</p>
+  )
+}
+~~~~
 
-  constructor(props) {
-    super(props)
+Next, we need to build in some views depending on where the user is in the health check process. Let’s add a button for the user to click to start the health check, and a results view for when the health check is complete.
 
-    this.views = {
-      READY: 'READY',
-      IN_PROGRESS: 'IN_PROGRESS',
-      COMPLETE: 'COMPLETE'
-    }
+*pages/check.js*
 
-    this.state = {
-      view: this.views.READY
+~~~~
+import React, { useState } from 'react'
+import App from '../components/App'
+import HealthCheck from '../components/HealthCheck'
+import HealthCheckComplete from '../components/HealthCheckComplete'
+import { Query } from 'react-apollo'
+import gql from 'graphql-tag'
+
+const HEALTHCHECK_QUERY = gql`query HealthCheck($id: ID!) {
+  HealthCheck(id: $id) {
+    id
+    responses {
+      id
     }
   }
+}`
 
-  static getInitialProps ({ query: { id } }) {
-    return { id }
+const Check = ({ id }) => {
+
+  const views = {
+    READY: 'READY',
+    IN_PROGRESS: 'IN_PROGRESS',
+    COMPLETE: 'COMPLETE'
   }
 
-  render () {
-    
-    return <App>
-      <Query query={getHealthCheckQuery} variables={{id: this.props.id}}>
+  const [currView, setCurrView] = useState(views.READY) 
+
+  return (
+    <App>
+      <Query query={HEALTHCHECK_QUERY} variables={{id}}>
         {({ loading, error, data }) => {
           if (loading) return <div>Loading...</div>
-          if (error || !data.HealthCheck) return <div>Error: Could not load HealthCheck with id: {this.props.id}</div>
+          if (error || !data.HealthCheck) return <div>Error: Could not load HealthCheck with id: {id}</div>
           return (
             <>
               {{
                 READY: <>
-                  <button onClick={() => this.setState({view: this.views.IN_PROGRESS})}>Begin health check</button>
+                  <h1>Loaded HealthCheck id: {id}</h1>
+                  <button onClick={() => setCurrView(views.IN_PROGRESS)}>Begin health check</button>
                 </>,
-                IN_PROGRESS: <HealthCheck onComplete={() => {
-                  console.log('COMPLETE!')
-                  this.setState({view: this.views.COMPLETE})}} 
+                IN_PROGRESS: <HealthCheck id={id} onComplete={(data) => {
+                  console.log('COMPLETE!', data)
+                  setCurrView(views.COMPLETE)}} 
                 />,
-                COMPLETE: <p>Thanks for completing the health check!</p>
-              }[this.state.view]}
+                COMPLETE: <HealthCheckComplete id={id} />
+              } [currView] }
             </>
           )
         }}
       </Query>
     </App>
-  }
+  )
 }
+
+Check.getInitialProps = async ({ query }) => {
+  return { id: query.id }
+}
+
+export default Check
 ~~~~
 
 To manage the state of which view is active, we use a views object as an enum and then within our render we have an inline object that renders a given view based on the current view state. 
@@ -507,17 +492,16 @@ Another way to write this could be with a switch statement or a series of simple
 {
   this.state.view == this.views.IN_PROGRESS &&
   <HealthCheck onComplete={() => {
-    console.log('COMPLETE!')
     this.setState({view: this.views.COMPLETE})}} 
   />
 }
 {
   this.state.view == this.views.COMPLETE &&
-  <p>Thanks for completing the health check!</p>
+  <HealthCheckComplete id={this.props.id} />
 }
 ~~~~
 
-##Part 4
+## Part 4
 
 In the last part, we created a component for a user to enter their responses to a health check, but we didn’t do anything with them. Now we need to store their answers in our GraphQL database and display them. 
 
@@ -637,7 +621,7 @@ export default HealthCheck
 
 ~~~~
 
-Next, we need a way to review all the health check responses and see the results of all the completed health checks. We will make a HealthCheckComplete component and again use a Query to pull the data from GraphQL.
+Next, we need a way to review all the health check responses and see the results of all the completed health checks. We will make a HealthCheckResults component and again use a Query to pull the data from GraphQL.
 
 Rather than defining our queries and mutations within the various components, it makes sense to bring them all together in one file and import them in as needed. While we’re at it, let’s put our `topicTitles` array in there as well since we’ll want to share that across our app.
 
@@ -675,18 +659,18 @@ export const createHealthCheckResponseMutation = gql`
 `
 ~~~~
 
-Now, for the HealthCheckComplete component, we will once again wrap the content in a Query component that will pass the GraphQL data to its children.
+Now, for the HealthCheckResults component, we will once again wrap the content in a Query component that will pass the GraphQL data to its children.
 
 To display the results, we can iterate through the responses and increment the values (Awesome/OK/Sucky) for each topic.
 
-*components/HealthCheckComplete.js*
+*components/HealthCheckResults.js*
 
 ~~~~
 import PropTypes from 'prop-types'
 import { Query } from 'react-apollo'
 import { getHealthCheckQuery, topicTitles } from '../api/operations'
 
-const HealthCheckComplete = (props) => {
+const HealthCheckResults = (props) => {
 
   return (
     <Query query={getHealthCheckQuery} variables={{id: props.id}}>
@@ -703,7 +687,7 @@ const HealthCheckComplete = (props) => {
 
         return (
           <>
-          	<p>Complete! Here are the results:</p>
+          	<p>Here are the results:</p>
           	{
           		topicRatings.map((topic, topicIndex) => 
           			<div key={'topicRating'+topicIndex}>
@@ -722,15 +706,14 @@ const HealthCheckComplete = (props) => {
   )
 }
 
-HealthCheckComplete.propTypes = {
+HealthCheckResults.propTypes = {
   id: PropTypes.string.isRequired
 }
 
-export default HealthCheckComplete
-
+export default HealthCheckResults
 ~~~~
 
-A key aspect of our GraphQL api is that the getHealthCheckQuery is cached, so when the onComplete event in our HealthCheck component fires, we need to tell it to refetch that query.
+The getHealthCheckQuery is cached, so when the onComplete event in our HealthCheck component fires, we need to tell it to refetch that query.
 
 *components/HealthCheck.js*
 
@@ -751,7 +734,7 @@ A key aspect of our GraphQL api is that the getHealthCheckQuery is cached, so wh
 ...
 ~~~~
 
-##Part 5
+## Part 5
 
 We have a basic working proof-of-concept for the Health Check web app. Now it is time to improve the design and make it more user-friendly.
 
@@ -949,6 +932,7 @@ With that done, in the command line we can run one command to deploy our project
 ~~~~
 $ now
 ~~~~
+
 
 
 
