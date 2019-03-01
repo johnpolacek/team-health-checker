@@ -4,7 +4,7 @@
   "scripts": {
     "dev": "next",
     "build": "next build",
-    "start": "next start"
+    "now-build": "next build"
   },
   "dependencies": {
     "apollo-boost": "^0.1.16",

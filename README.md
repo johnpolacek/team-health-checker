@@ -65,6 +65,32 @@ Take note of the Simple API GraphQL Endpoint, we will need that. Open `lib/init-
 
 This will break all the requests coming from the example app since we are now pointing at the new schema we just created.
 
+One key thing at work in the example is that our App component is actually wrapped in a [higher-order component (HOC)](https://reactjs.org/docs/higher-order-components.html).
+
+> Using the HOC pattern we’re able to pass down a central store of query result data created by Apollo into our React component hierarchy defined inside each page of our Next application. - read more at [The idea behind the example](https://github.com/zeit/next.js/tree/master/examples/with-apollo)
+
+*pages/_app.js*
+
+~~~~
+import App, {Container} from 'next/app'
+import React from 'react'
+import withApolloClient from '../lib/with-apollo-client'
+import { ApolloProvider } from 'react-apollo'
+
+class MyApp extends App {
+  render () {
+    const {Component, pageProps, apolloClient} = this.props
+    return <Container>
+      <ApolloProvider client={apolloClient}>
+        <Component {...pageProps} />
+      </ApolloProvider>
+    </Container>
+  }
+}
+
+export default withApolloClient(MyApp)
+~~~~
+
 Now, let’s get into the React code. Returning to the next.js example, we can see some of the components are already using some GraphQL mutations.
 
 Open `index.js` and replace it with this:
@@ -125,9 +151,9 @@ To better understand how it all works, check out:
 
 Now that we can create a health check, we need to be able to share a url with our team and collect their responses. We can use the health check’s id to create a route.
 
-[Now](https://zeit.co/now) is a serverless deployment service from [Zeit](https://zeit.co), the makers of Next.js. We will be using Now 2.0 to configure out routes.
+[Now](https://zeit.co/now) is a serverless deployment service from [Zeit](https://zeit.co), the makers of Next.js. We will be using Now 2.0 to configure our routes - see their [Guide to Custom Serverless Next.js Routing](https://zeit.co/guides/custom-next-js-server-to-routes/).
 
-Define a new route at `/check/:id` in a now.json config file.
+Define a new route at `/check/:id` in a now.json config file, and specify that our build step will use `@now/next`.
 
 *now.json*
 
@@ -141,10 +167,45 @@ Define a new route at `/check/:id` in a now.json config file.
 }
 ~~~~
 
-Let’s see what we have so far.
+Let’s set up a basic page to test our route.
+
+*pages/check.js*
 
 ~~~~
-npm run dev
+import App from '../components/App'
+
+const HealthCheck = ({ id }) => (
+  <App>
+    <h1>Loaded HealthCheck id: {id}</h1>
+  </App>
+)
+HealthCheck.getInitialProps = async ({ query }) => {
+  return { id: query.id }
+}
+export default HealthCheck
+~~~~
+
+Then, we will update `package.json` with a new build command for now.
+
+*package.json*
+
+~~~~
+"scripts": {
+  "dev": "next",
+  "build": "next build",
+  "now-build": "next build"
+},
+~~~~
+
+Let’s see what we have so far.
+
+
+
+NEED THIS:
+https://github.com/zeit/now-cli/pull/1883
+
+~~~~
+now dev
 ~~~~
 
 Go to `http://localhost:3000/check/123` and you should see the id from the url parameter output to the browser window.
