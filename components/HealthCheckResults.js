@@ -13,7 +13,7 @@ const HealthCheckResults = (props) => {
         let topicRatings = topicTitles.map(() => { return [0,0,0] })
         const responses = data.HealthCheck.responses.forEach((response) => {
      			response.ratings.forEach((rating, topicIndex) => {
-     				topicRatings[topicIndex][rating]++
+            topicRatings[topicIndex][rating]++
      			})
         })
 
