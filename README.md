@@ -5,10 +5,11 @@
 
 ### What are we building?
 
-#### Spotify Health Check
+#### Team Health Check
 - Facillitate round table discussion that can improve your team.
 - Example listen to Rabbit Hole podcast
 - Analog is great for in-office, what about remote?
+- Our health check is modeled from the [Spotify Squad Health Check](https://labs.spotify.com/2014/09/16/squad-health-check-model/)
 
 ### SSR Web Apps 
 
@@ -216,38 +217,51 @@ To do that, we’ll need to bring in some code from the previous page. Also, we 
 
 The query will check whether id from the url is a valid HealthCheck id. This time, rather than calling the query method on the `ApolloClient` directly, we will use Apollo’s [render prop API](https://blog.apollographql.com/introducing-react-apollo-2-1-c837cc23d926) to manage the data with a Query component.
 
+Rather than defining our GraphQL operations inside components, we can instead store these in their own module.
+
+*api/operations.js*
+
+~~~~
+import gql from 'graphql-tag';
+
+export const getHealthCheckQuery = gql`
+  query HealthCheck($id: ID!) {
+    HealthCheck(id: $id) {
+      id
+      responses {
+        id
+        ratings
+      }
+    }
+  }
+`
+~~~~
+
 *pages/check.js*
 
 ~~~~
-const getHealthCheckQuery = gql`query HealthCheck($id: ID!) {
-  HealthCheck(id: $id) {
-    id
-    responses {
-      id
-      ratings
-    }
-  }
-}`
+import React from 'react'
+import App from '../components/App'
+import getHealthCheckQuery from '../api/operations'
+import { Query } from 'react-apollo'
 
-export default class extends React.Component {
-  static getInitialProps ({ query: { id } }) {
-    return { id }
-  }
-
-  render () {
-    return <App>
-      <Query query={getHealthCheckQuery} variables={{id: this.props.id}}>
+const HealthCheck = ({ id }) => (
+  <App>
+      <Query query={getHealthCheckQuery} variables={{id}}>
         {({ loading, error, data }) => {
           if (loading) return <div>Loading...</div>
           if (error || !data.HealthCheck) return <div>Error: Could not load HealthCheck with id: {this.props.id}</div>
           return (
-            <h1>Loaded HealthCheck id: {this.props.id}</h1>
+            <h1>Loaded HealthCheck id: {id}</h1>
           )
         }}
       </Query>
     </App>
-  }
+)
+HealthCheck.getInitialProps = async ({ query }) => {
+  return { id: query.id }
 }
+export default HealthCheck
 ~~~~
 
 As you can see, we define a query for the HealthCheck, and then in our Query component we handle the loading, error and success states.
@@ -258,23 +272,28 @@ Rather than putting more logic into the page, now is a good time to create a com
 
 We are going to use React Hooks in this component, so we will need to install the latest version of React in our project (and might as well update the other dependencies while we are at it).
 
-*components/HealthCheckCreator.js*
+*api/operations.js*
 
 ~~~~
-import { useState } from 'react';
-import { Mutation } from 'react-apollo'
-import gql from 'graphql-tag'
-import Link from 'next/link'
-
-const CREATEHEALTHCHECK_MUTATION = gql`
+...
+export const createHealthCheckMutation = gql`
   mutation createHealthCheck($responses: [HealthCheckresponsesHealthCheckResponse!]) {
     createHealthCheck(responses: $responses) {
       id
     }
   }
 `
+~~~~
 
-export default (props) => {
+*components/HealthCheckCreator.js*
+
+~~~~
+import { useState } from 'react';
+import { Mutation } from 'react-apollo'
+import createHealthCheckMutation from '../api/operations'
+import Link from 'next/link'
+
+const HealthCheckCreator = (props) => {
   const [id, setId] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -296,7 +315,7 @@ export default (props) => {
           </>
         ) : (
           <Mutation 
-            mutation={CREATEHEALTHCHECK_MUTATION} 
+            mutation={createHealthCheckMutation} 
             onCompleted={(data) => {setId(data.createHealthCheck.id)}}
           >
             {createMutation => <button 
@@ -313,9 +332,9 @@ export default (props) => {
     </>
   )
 }
-~~~~
 
-Let’s go over what we are doing.
+export default HealthCheckCreator
+~~~~
 
 As you can see, we are using React Hooks to manage the state for before/after an id is generated for a new health check, as well as the in-between loading state.
 
@@ -361,6 +380,16 @@ For the next part of developing this app, we will allow people to fill in the he
 
 We won’t worry about styling or a great user experience just yet, as this is just an exploratory proof-of-concept at this point.
 
+First, let’s define our topic titles for our health check api (our health check is based on [Spotify’s Squad Health Check](https://labs.spotify.com/2014/09/16/squad-health-check-model/).
+
+*api/operations.js*
+
+~~~~
+...
+export const topicTitles = ['Easy to release','Suitable Process','Tech Quality','Value','Speed','Mission','Fun','Learning','Support','Pawns']
+....
+~~~~
+
 Let’s add a component that allows people to provide responses to each of the topics.
 
 *pages/check.js*
@@ -377,13 +406,13 @@ Let’s add a component that allows people to provide responses to each of the t
 ~~~~
 import PropTypes from 'prop-types'
 import { useState } from 'react'
+import { topicTitles } from '../api/operations'
 
 const HealthCheck = (props) => {
 
   const [currRating, setCurrRating] = useState(null)
   const [ratings, setRatings] = useState([])
   
-  const topicTitles = ['Easy to release','Suitable Process','Tech Quality','Value','Speed','Mission','Fun','Learning','Support','Pawns']
   const currTopic = ratings.length
 
   const onChange = e => {
@@ -499,6 +528,19 @@ In the last part, we created a component for a user to enter their responses to 
 
 To achieve this, as we did when creating a new health check, we will be creating a mutation, in this case a nested create mutation (see the [Graphcool docs](https://www.graph.cool/docs/reference/graphql-api/mutation-api-ol0yuoz6go#nested-create-mutations)), to add the health check response and link it to the id of the health check.
 
+*api/operations.js*
+
+~~~~
+...
+export const createHealthCheckResponseMutation = gql`
+  mutation createHealthCheckResponse($ratings: [Int!]!, $healthCheckId: ID!) {
+    createHealthCheckResponse(ratings: $ratings, healthCheckId: $healthCheckId) {
+      id
+    }
+  }
+`
+~~~~
+
 Update the health check component with a confirm step to send the completed response to the database.
 
 *components/HealthCheck.js*
@@ -508,14 +550,7 @@ import PropTypes from 'prop-types'
 import { useState } from 'react'
 import { Mutation } from 'react-apollo'
 import gql from 'graphql-tag'
-
-const createHealthCheckResponseMutation = gql`
-  mutation createHealthCheckResponse($ratings: [Int!]!, $healthCheckId: ID!) {
-    createHealthCheckResponse(ratings: $ratings, healthCheckId: $healthCheckId) {
-      id
-    }
-  }
-`
+import { createHealthCheckResponseMutation, getHealthCheckQuery, topicTitles } from '../api/operations'
 
 const HealthCheck = (props) => {
 
@@ -524,8 +559,6 @@ const HealthCheck = (props) => {
   const [isDone, setIsDone] = useState(false)
   const [loading, setLoading] = useState(false)
   
-  // const topicTitles = ['Easy to release','Suitable Process','Tech Quality','Value','Speed','Mission','Fun','Learning','Support','Pawns']
-  const topicTitles = ['Easy to release','Suitable Process']
   const currTopic = ratings.length
   const ratingLabels = {
     0: 'Sucky',
@@ -546,13 +579,17 @@ const HealthCheck = (props) => {
     <>
       {
         ratings.length === topicTitles.length ? (
-          <Mutation 
+          <Mutation
             mutation={createHealthCheckResponseMutation} 
             variables={{ ratings, healthCheckId: props.id }}
-            onCompleted={(data) => {
-              console.log('createHealthCheckResponseMutation onCompleted', data)
-              props.onComplete(ratings)
+            onCompleted={props.onComplete}
+            refetchQueries={() => {
+              return [{
+                query: getHealthCheckQuery,
+                variables: { id: props.id }
+              }]
             }}
+            awaitRefetchQueries={true}
           >
             {
               createMutation => {
@@ -610,7 +647,6 @@ HealthCheck.propTypes = {
 }
 
 export default HealthCheck
-
 ~~~~
 
 Now, for the HealthCheckComplete component, we will show a success message and a link to view the results for all of the team’s responses.
@@ -636,40 +672,6 @@ Next, we need a way to review all the health check responses and see the results
 
 Rather than defining our queries and mutations within the various components, it makes sense to bring them all together in one file and import them in as needed. While we’re at it, let’s put our `topicTitles` array in there as well since we’ll want to share that across our app.
 
-*api/operations.js*
-
-~~~~
-import gql from 'graphql-tag';
-
-export const topicTitles = ['Easy to release','Suitable Process','Tech Quality','Value','Speed','Mission','Fun','Learning','Support','Pawns']
-
-export const getHealthCheckQuery = gql`query HealthCheck($id: ID!) {
-  HealthCheck(id: $id) {
-    id
-    responses {
-      id
-      ratings
-    }
-  }
-}`
-
-export const createHealthCheckMutation = gql`
-  mutation createHealthCheck($responses: [HealthCheckresponsesHealthCheckResponse!]) {
-    createHealthCheck(responses: $responses) {
-      id
-    }
-  }
-`
-
-export const createHealthCheckResponseMutation = gql`
-  mutation createHealthCheckResponse($ratings: [Int!]!, $healthCheckId: ID!) {
-    createHealthCheckResponse(ratings: $ratings, healthCheckId: $healthCheckId) {
-      id
-    }
-  }
-`
-~~~~
-
 To display the results, we can iterate through the responses and increment the values (Awesome/OK/Sucky) for each topic.
 
 *components/HealthCheckResults.js*
@@ -678,8 +680,6 @@ To display the results, we can iterate through the responses and increment the v
 import PropTypes from 'prop-types'
 import { Query } from 'react-apollo'
 import { getHealthCheckQuery, topicTitles } from '../api/operations'
-import { Div, H1, H2, P, Span } from 'styled-system-html'
-import HealthCheckIcon from '../components/HealthCheckIcon'
 
 const HealthCheckResults = (props) => {
 
@@ -697,30 +697,20 @@ const HealthCheckResults = (props) => {
         })
 
         return (
-          <Div textAlign="center" py={[4,5]} mb={[4,5]}>
-            <H1 color="base" pb={3} fontSize={[5,6]} fontWeight="400">Team Health Check Results</H1>
-            <P fontSize={[2,3]} pb={[3,4]}>{data.HealthCheck.responses.length} responses so far. Here are the results...</P>
-            {
-              topicRatings.map((topic, topicIndex) => {
-                const rating = Math.round((topic[1] + (topic[2] * 2))/data.HealthCheck.responses.length)
-                const color = rating === 0 ? 'red' : rating === 1 ? 'gray5' : 'green'
-                return (
-                  <Div display="inline-block" p={3} m={3} fontSize={4} key={'topicRating'+topicIndex} bg={color} borderRadius="8px" color="white">
-                    <Div width={48} mx="auto">
-                      <HealthCheckIcon fill="#fff" rating={rating} />
-                    </Div>
-                    <H2 width={240} mx="auto" borderBottom="solid 1px" pb={3} px={4} mb={3} borderColor="#fff" fontSize={1} fontWeight="bold">{topicTitles[topicIndex]}</H2>
-                    <Div fontSize={2}>
-                      <P>Awesome: {topic[2]}</P>
-                      <P>OK: {topic[1]}</P>
-                      <P>Sucky: {topic[0]}</P>
-                    </Div>
-                    <P py={2} fontSize={1} fontStyle="italic">( avg <Span fontSize={0}>{((topic[1] + (topic[2] * 2))/data.HealthCheck.responses.length).toFixed(2)}</Span> )</P>
-                  </Div>
-                )
-              })
-            }
-          </Div>
+          <>
+          	<p>Here are the results:</p>
+          	{
+          		topicRatings.map((topic, topicIndex) => 
+          			<div key={'topicRating'+topicIndex}>
+          				<h3>{topicTitles[topicIndex]}</h3>
+          				<p>Awesome: {topic[2]}</p>
+          				<p>OK: {topic[1]}</p>
+          				<p>Sucky: {topic[0]}</p>
+          				<p>Average: {topic[1] + (topic[2] * 2)/data.HealthCheck.responses.length}</p>
+          			</div>
+          		)
+          	}
+          </>
         )
       }}
     </Query>
