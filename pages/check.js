@@ -1,17 +1,7 @@
 import React from 'react'
 import App from '../components/App'
+import getHealthCheckQuery from '../api/operations'
 import { Query } from 'react-apollo'
-import gql from 'graphql-tag'
-
-const getHealthCheckQuery = gql`query HealthCheck($id: ID!) {
-  HealthCheck(id: $id) {
-    id
-    responses {
-      id
-      ratings
-    }
-  }
-}`
 
 const HealthCheck = ({ id }) => (
   <App>
