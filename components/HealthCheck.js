@@ -1,12 +1,12 @@
 import PropTypes from 'prop-types'
 import { useState } from 'react'
+import { topicTitles } from '../api/operations'
 
 const HealthCheck = (props) => {
 
   const [currRating, setCurrRating] = useState(null)
   const [ratings, setRatings] = useState([])
   
-  const topicTitles = ['Easy to release','Suitable Process','Tech Quality','Value','Speed','Mission','Fun','Learning','Support','Pawns']
   const currTopic = ratings.length
 
   const onChange = e => {

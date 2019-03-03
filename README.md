@@ -5,10 +5,11 @@
 
 ### What are we building?
 
-#### Spotify Health Check
+#### Team Health Check
 - Facillitate round table discussion that can improve your team.
 - Example listen to Rabbit Hole podcast
 - Analog is great for in-office, what about remote?
+- Our health check is modeled from the [Spotify Squad Health Check](https://labs.spotify.com/2014/09/16/squad-health-check-model/)
 
 ### SSR Web Apps 
 
@@ -379,6 +380,16 @@ For the next part of developing this app, we will allow people to fill in the he
 
 We won’t worry about styling or a great user experience just yet, as this is just an exploratory proof-of-concept at this point.
 
+First, let’s define our topic titles for our health check api (our health check is based on [Spotify’s Squad Health Check](https://labs.spotify.com/2014/09/16/squad-health-check-model/).
+
+*api/operations.js*
+
+~~~~
+...
+export const topicTitles = ['Easy to release','Suitable Process','Tech Quality','Value','Speed','Mission','Fun','Learning','Support','Pawns']
+....
+~~~~
+
 Let’s add a component that allows people to provide responses to each of the topics.
 
 *pages/check.js*
@@ -395,13 +406,13 @@ Let’s add a component that allows people to provide responses to each of the t
 ~~~~
 import PropTypes from 'prop-types'
 import { useState } from 'react'
+import { topicTitles } from '../api/operations'
 
 const HealthCheck = (props) => {
 
   const [currRating, setCurrRating] = useState(null)
   const [ratings, setRatings] = useState([])
   
-  const topicTitles = ['Easy to release','Suitable Process','Tech Quality','Value','Speed','Mission','Fun','Learning','Support','Pawns']
   const currTopic = ratings.length
 
   const onChange = e => {
