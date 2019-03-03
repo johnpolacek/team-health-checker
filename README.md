@@ -355,7 +355,7 @@ Test it out and you after you click on the link, you should land on the health c
 
 To see the failure state, go to `http://localhost:3000/check/123` and there should be an error message that the health check with id 123 could not be found.
 
-## Part 3
+##Part 3
 
 For the next part of developing this app, we will allow people to fill in the health check responses.
 
@@ -377,87 +377,56 @@ Let’s add a component that allows people to provide responses to each of the t
 ~~~~
 import PropTypes from 'prop-types'
 import { useState } from 'react'
-import { Mutation } from 'react-apollo'
-import { createHealthCheckResponseMutation, getHealthCheckQuery, topicTitles, ratingLabels } from '../api/operations'
-import HealthCheckTopic from './HealthCheckTopic'
-import HealthCheckIcon from './HealthCheckIcon'
-import Button from './Button.js'
-import { Div, H1, H2 } from 'styled-system-html'
 
 const HealthCheck = (props) => {
 
+  const [currRating, setCurrRating] = useState(null)
   const [ratings, setRatings] = useState([])
-  const [loading, setLoading] = useState(false)
   
+  const topicTitles = ['Easy to release','Suitable Process','Tech Quality','Value','Speed','Mission','Fun','Learning','Support','Pawns']
   const currTopic = ratings.length
-  
-  const onConfirmRating = (rating) => {
-    setRatings(ratings.concat([rating]))
+
+  const onChange = e => {
+    setCurrRating(parseInt(e.target.value))
+  }
+
+  const onConfirmRating = () => {
+    const newRatings = ratings.concat([currRating])
+    if (newRatings.length === topicTitles.length) {
+      props.onComplete(newRatings)
+    } else {
+      setRatings(newRatings)
+      setCurrRating(null)
+    }  
   }
 
   return (
-    <Div textAlign="center" py={4}>
-      <H1 color="base" pb={3} fontSize={[4,5]}>Team Health Check</H1>
-      {
-        ratings.length === topicTitles.length ? (
-          <Mutation 
-            mutation={createHealthCheckResponseMutation} 
-            variables={{ ratings, healthCheckId: props.id }}
-            onCompleted={props.onComplete}
-            refetchQueries={() => {
-              console.log("refetchQueries")
-                return [{
-                    query: getHealthCheckQuery,
-                    variables: { id: props.id }
-                }]
-            }}
-            awaitRefetchQueries={true}
-          >
-            {
-              createMutation => {
-                return (
-                  <>
-                    <Div width={[1,1,1,1,1100]} mx="auto" px={[2,3]}>
-                      {
-                        ratings.map((rating, i) => {
-                          const color = rating === 0 ? 'red' : rating === 1 ? 'gray5' : 'green'
-                          return (
-                            <Div display="inline-block" px={[1,2,2]} py={['2px',2,2]}>
-                              <Div width={[100,120,200,240]} py={3} px={[1,2,3]} fontSize={[1,3]} key={'topicRating'+i} bg={color} borderRadius="8px" color="white" style={{overflow:'hidden'}}>
-                                <Div width={[24,36]} mx="auto">
-                                  <HealthCheckIcon fill="#fff" rating={rating} />
-                                </Div>
-                                <H2 height={[30,30,'auto']} fontSize={[0,1,2]}>{topicTitles[i]}</H2>
-                              </Div>
-                            </Div>
-                          )
-                        })
-                      }
-                    </Div>
-                    <Button 
-                      bg={loading ? 'gray' : 'green'} color="white" fontSize={3} p={5} my={5} borderRadius="8px"
-                      disabled={loading}
-                      onClick={() => {
-                        setLoading(true)
-                        createMutation()
-                      }}
-                      children = {loading ? 'Saving...' : 'Confirm'}
-                    />
-                  </>
-                )
-              }
-            }
-          </Mutation>
-        ) : (
-          <HealthCheckTopic title={topicTitles[currTopic]} onConfirm={onConfirmRating} index={ratings.length} />
-        )
-      }
-    </Div>
+    <>
+      <h2>{topicTitles[currTopic]}</h2>
+      <div onChange={onChange}>
+        <div>
+          <input checked={currRating === 2}  type="radio" id="awesome" name="rating" value="2" />
+          <label htmlFor="awesome">Awesome</label>
+        </div>
+        <div>
+          <input checked={currRating === 1} type="radio" id="ok" name="rating" value="1" />
+          <label htmlFor="ok">OK</label>
+        </div>
+        <div>
+          <input checked={currRating === 0} type="radio" id="sucky" name="rating" value="0" />
+          <label htmlFor="sucky">Sucky</label>
+        </div>
+      </div>
+      <button 
+        disabled={currRating == null} 
+        onClick={onConfirmRating}
+        children="Next"
+      />
+    </>
   )
 }
 
 HealthCheck.propTypes = {
-  id: PropTypes.string.isRequired,
   onComplete: PropTypes.func.isRequired
 }
 
@@ -468,7 +437,7 @@ Our HealthCheck component contains an array of topic titles, and an array of rat
 
 For each topic, the user will click a button which will add the rating to the array of ratings responses and go to the next topic. When they have provided ratings for all the topics, an `onComplete` function prop will be called.
 
-Let’s make a simple component to show a message when the health check is complete
+Next, we need to build in some views depending on where the user is in the health check process. Let’s add a button for the user to click to start the health check, and a results view for when the health check is complete.
 
 *pages/check.js*
 
@@ -507,9 +476,10 @@ export default class extends React.Component {
                   <button onClick={() => this.setState({view: this.views.IN_PROGRESS})}>Begin health check</button>
                 </>,
                 IN_PROGRESS: <HealthCheck onComplete={() => {
+                  console.log('COMPLETE!')
                   this.setState({view: this.views.COMPLETE})}} 
                 />,
-                COMPLETE: <HealthCheckComplete id={this.props.id} />
+                COMPLETE: <p>Thanks for completing the health check!</p>
               }[this.state.view]}
             </>
           )
@@ -523,48 +493,11 @@ export default class extends React.Component {
 To manage the state of which view is active, we use a views object as an enum and then within our render we have an inline object that renders a given view based on the current view state. 
 
 
-## Part 4
+##Part 4
 
 In the last part, we created a component for a user to enter their responses to a health check, but we didn’t do anything with them. Now we need to store their answers in our GraphQL database and display them. 
 
 To achieve this, as we did when creating a new health check, we will be creating a mutation, in this case a nested create mutation (see the [Graphcool docs](https://www.graph.cool/docs/reference/graphql-api/mutation-api-ol0yuoz6go#nested-create-mutations)), to add the health check response and link it to the id of the health check.
-
-Rather than defining our queries and mutations within the various components, it makes sense to bring them all together in one file and import them in as needed. While we’re at it, let’s put `topicTitles` and `ratingLabels` in there as well since we’ll want to share that across our app.
-
-*api/operations.js*
-
-~~~~
-import gql from 'graphql-tag';
-
-export const topicTitles = ['Delivering Value','Easy to release','Fun','Health of Codebase','Learning','Mission','Pawns or Players','Speed','Suitable Process','Support','Teamwork']
-export const ratingLabels = {0: 'Sucky', 1: 'OK', 2: 'Awesome'}
-
-export const getHealthCheckQuery = gql`query HealthCheck($id: ID!) {
-  HealthCheck(id: $id) {
-    id
-    responses {
-      id
-      ratings
-    }
-  }
-}`
-
-export const createHealthCheckMutation = gql`
-  mutation createHealthCheck($responses: [HealthCheckresponsesHealthCheckResponse!]) {
-    createHealthCheck(responses: $responses) {
-      id
-    }
-  }
-`
-
-export const createHealthCheckResponseMutation = gql`
-  mutation createHealthCheckResponse($ratings: [Int!]!, $healthCheckId: ID!) {
-    createHealthCheckResponse(ratings: $ratings, healthCheckId: $healthCheckId) {
-      id
-    }
-  }
-`
-~~~~
 
 Update the health check component with a confirm step to send the completed response to the database.
 
@@ -574,15 +507,31 @@ Update the health check component with a confirm step to send the completed resp
 import PropTypes from 'prop-types'
 import { useState } from 'react'
 import { Mutation } from 'react-apollo'
-import { createHealthCheckResponseMutation, getHealthCheckQuery, topicTitles, ratingLabels } from '../api/operations'
+import gql from 'graphql-tag'
+
+const createHealthCheckResponseMutation = gql`
+  mutation createHealthCheckResponse($ratings: [Int!]!, $healthCheckId: ID!) {
+    createHealthCheckResponse(ratings: $ratings, healthCheckId: $healthCheckId) {
+      id
+    }
+  }
+`
 
 const HealthCheck = (props) => {
 
   const [currRating, setCurrRating] = useState(null)
   const [ratings, setRatings] = useState([])
+  const [isDone, setIsDone] = useState(false)
   const [loading, setLoading] = useState(false)
   
+  // const topicTitles = ['Easy to release','Suitable Process','Tech Quality','Value','Speed','Mission','Fun','Learning','Support','Pawns']
+  const topicTitles = ['Easy to release','Suitable Process']
   const currTopic = ratings.length
+  const ratingLabels = {
+    0: 'Sucky',
+    1: 'OK',
+    2: 'Awesome'
+  }
 
   const onChange = e => {
     setCurrRating(parseInt(e.target.value))
@@ -600,15 +549,10 @@ const HealthCheck = (props) => {
           <Mutation 
             mutation={createHealthCheckResponseMutation} 
             variables={{ ratings, healthCheckId: props.id }}
-            onCompleted={props.onComplete}
-            refetchQueries={() => {
-              console.log("refetchQueries")
-                return [{
-                    query: getHealthCheckQuery,
-                    variables: { id: props.id }
-                }]
+            onCompleted={(data) => {
+              console.log('createHealthCheckResponseMutation onCompleted', data)
+              props.onComplete(ratings)
             }}
-            awaitRefetchQueries={true}
           >
             {
               createMutation => {
@@ -666,6 +610,7 @@ HealthCheck.propTypes = {
 }
 
 export default HealthCheck
+
 ~~~~
 
 Now, for the HealthCheckComplete component, we will show a success message and a link to view the results for all of the team’s responses.
@@ -835,14 +780,8 @@ export default Results
   "builds": [{ "src": "package.json", "use": "@now/next" }]
 }
 ~~~~
-...
-const routes = (module.exports = nextRoutes())
-routes.add('check', '/check/:id')
-routes.add('results', '/results/:id')
-...
-~~~~
 
-Lastly, the getHealthCheckQuery is cached, so when the onComplete event in our HealthCheck component fires, we need to tell it to refetch that query.
+A key aspect of our GraphQL api is that the getHealthCheckQuery is cached, so when the onComplete event in our HealthCheck component fires, we need to tell it to refetch that query.
 
 *components/HealthCheck.js*
 
@@ -863,16 +802,18 @@ Lastly, the getHealthCheckQuery is cached, so when the onComplete event in our H
 ...
 ~~~~
 
-## Part 5
+##Part 5
 
 
 We have a basic working proof-of-concept for the Health Check web app. Now it is time to improve the design and make it more user-friendly.
 
-First, before we even get into the code, we can think about our design system. What typography do we need? What colors should we use?
+You don’t need to use CSS-in-JS to build React Apps, but styles are often closely tied to state at the component layer, so for that and other reasons, it is quite popular. Let’s do it!
 
-If we were a brand, we might want a webfont that would help differentiate us from others on the web. Since that is not the case, it seems like a good decision for performance reasons to use a [web safe CSS font stack](https://www.cssfontstack.com/). We can also define a type scale and weights to use in our app.
+First off, let’s set up some theming configuration for colors, typography and spacing. To do this, we will use a [ThemeProvider component](https://www.styled-components.com/docs/advanced#theming) from [styled components](https://www.styled-components.com/)
 
-When it comes to colors, this is an exercise for teams to take together so we should try to make it fun, so choosing some brighter colors is appropriate. Remember to choose a color palette that is accessibility - see [these 90 examples of A11Y compliant color combos](http://clrs.cc/a11y/)
+~~~~
+$ npm i styled-components
+~~~~
 
 ThemeProvider doesn’t do much without a theme, so let’s think about our design system. What typography do we need? What colors should we use?
 
@@ -887,41 +828,33 @@ Let’s define these aspects of our design theme in code so we can use them thro
 *components/Theme.js*
 
 ~~~~
-// Typography
-export const font = `avenir next, avenir, helvetica, arial, sans-serif`;
+export const font = `'avenir next', avenir, helvetica, arial, sans-serif`;
+export const monospace = `"SF Mono", "Roboto Mono", Menlo, monospace`
 export const fontSizes = [12,14,16,20,24,32,48,64,72,96]
 export const weights = [200,400,700]
 
-// Colors
 export const colors = {
   "base": "#4169e1",
   "black": "#000",
   "blue": "#4169e1",
-  ...
+  ....
 }
 
-// for text on white background, or background colors behind white text
-export darkPalette = ['blue','orange','purple','cyan','pink']
-
-// layout
 export const breakpoints = ['32em','48em','64em','80em']
 export const space = [0,4,8,16,32,64,128]
+export const radius = 4
 
 export default {
   font,
+  monospace,
+  fontFamilies,
   weights,
   fontSizes,
   colors,
   breakpoints,
-  space
+  space,
+  radius
 }
-
-~~~~
-
-You don’t need to use CSS-in-JS to build React Apps, but styles are often closely tied to state at the component layer, so for that and other reasons, it is quite popular. Let’s do it!
-
-~~~~
-$ npm i styled-components
 ~~~~
 
 [Next.js](https://nextjs.org) has a [bare-bones example](https://github.com/zeit/next.js/tree/master/examples/with-styled-components) of using [styled-components](https://www.styled-components.com/) with server-side rendering so that we can ship a minimal amount of CSS on page load. 
@@ -1033,40 +966,22 @@ We can switch the html elements to our components which can accept style props a
 *pages/index.js*
 
 ~~~~
-import PropTypes from 'prop-types'
-import { Div, H1, P, A } from  'styled-system-html'
-import Button from './Button'
-import HealthCheckIntro from './HealthCheckIntro'
-
-const HealthCheckBegin = (props) => (
-  <Div textAlign="center" py={[3,4]} px={3}>
-    <H1 color="base" pt={4} pb={3} fontSize={[5,6]}>Begin Team Health&nbsp;Check</H1>
-    <HealthCheckIntro />
-    <Button bg="green" onClick={props.onBegin}>Begin Health Check</Button>
-  </Div>
-)
-
-HealthCheckBegin.propTypes = {
-  onBegin: PropTypes.func.isRequired
-}
-
-export default HealthCheckBegin
-~~~~
-
-*components/HealthCheckIntro.js*
-
-~~~~
-import { Div, P, A } from 'styled-system-html'
+import App from '../components/App'
+import HealthCheckCreator from '../components/HealthCheckCreator'
+import { Div, H1, P } from 'styled-system-html'
 
 export default () => (
-	<Div px={3} pt={3} pb={4} fontSize={[2,2,3]}>
-    <P pb={3}>Health checks help you find out how your team is doing, and work together to improve.</P>
-    <P pb={3}>This health check is based on <A color="cyan" href="https://labs.spotify.com/2014/09/16/squad-health-check-model/" style={{whiteSpace:'nowrap'}}>Spotify’s Squad Health Check Model</A>.</P>
-  </Div>
+  <App>
+  	<Div textAlign="center" py={54}>
+	    <H1 color="base" pt={4} pb={3} fontSize={8} fontWeight="400">Team Health Checker</H1>
+	    <P pb={5} fontSize={3}>Health checks help you find out how your team is doing, and work together to improve.</P>
+	    <HealthCheckCreator />
+	</Div>
+  </App>
 )
 ~~~~
 
-*components/HealthCheckCreator.js*
+Next up, we will update
 
 *components/HealthCheckIntro.js*
 
@@ -1520,10 +1435,7 @@ Now that we have a working prototype of our app, we should add testing.
 
 Some schools of thought would say that should have been step #1, but I have found that when you are still in the creative, figuring-it-out stage, it can be best to build a stable version first, with minimal features, then add the testing, especially before the project gets too big.
 
-Mobile testing
-https://docs.cypress.io/api/commands/viewport.html#Syntax
-
-## Part 8
+## Part 7
 
 With our tests in place, we can feel confident enough to share our app with the world, or at least some close friends. 
 
@@ -1560,6 +1472,7 @@ Then we create a now config file to point at our next config file and use the ne
 }
 ~~~~
 
+At the time of this writing, we have a dependency on next.js version 8 canary. It is likely by the time you read this, 8.0.0 will have been released, and no changes to `package.json` will be necessary. If not, update the version of next: 
 
 *package.json*
 
@@ -1597,17 +1510,3 @@ https://econsultancy.com/21-first-class-examples-of-effective-web-form-design/
 
 
 
-http://blog.crisp.se/wp-content/uploads/2014/02/Team-barometer-self-evaluation-tool-Cards.pdf
-https://blog.crisp.se/2014/01/30/jimmyjanlen/team-barometer-self-evaluation-tool
-
-https://medium.com/the-liberators/agile-teams-dont-use-happiness-metrics-measure-team-morale-3050b339d8af
-
-https://www.atlassian.com/team-playbook/health-monitor/project-teams
-
-https://sidlee.com/en/?ref=bestwebsite.gallery
-https://wellset.co/home
-https://www.sysdoc.com/
-https://futurecomes.com/
-https://rallyinteractive.com/
-http://thrivesolo.com/
-https://econsultancy.com/21-first-class-examples-of-effective-web-form-design/
