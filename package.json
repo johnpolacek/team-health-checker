@@ -1,5 +1,6 @@
 {
   "name": "team-health-checker",
+  "description": "Help your team improve by taking a Team Health Check",
   "version": "0.1.0",
   "description": "Help your team improve by taking a Team Health Check",
   "scripts": {
