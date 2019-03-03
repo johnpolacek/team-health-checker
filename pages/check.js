@@ -1,18 +1,10 @@
 import React, { useState } from 'react'
 import App from '../components/App'
+import getHealthCheckQuery from '../api/operations'
+import { Query } from 'react-apollo'
 import HealthCheck from '../components/HealthCheck'
 import HealthCheckComplete from '../components/HealthCheckComplete'
-import { Query } from 'react-apollo'
-import gql from 'graphql-tag'
 
-const HEALTHCHECK_QUERY = gql`query HealthCheck($id: ID!) {
-  HealthCheck(id: $id) {
-    id
-    responses {
-      id
-    }
-  }
-}`
 
 const Check = ({ id }) => {
 
@@ -26,7 +18,7 @@ const Check = ({ id }) => {
 
   return (
     <App>
-      <Query query={HEALTHCHECK_QUERY} variables={{id}}>
+      <Query query={getHealthCheckQuery} variables={{id}}>
         {({ loading, error, data }) => {
           if (loading) return <div>Loading...</div>
           if (error || !data.HealthCheck) return <div>Error: Could not load HealthCheck with id: {id}</div>
