@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Mutation } from 'react-apollo'
-import Link from 'next/link'
 import { createHealthCheckMutation } from '../api/operations'
 import { Div, H2, P, A, Input } from 'styled-system-html'
 import Button from './Button'
+import Link from 'next/link'
 
 export default (props) => {
   const [id, setId] = useState(null);
