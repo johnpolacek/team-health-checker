@@ -1,6 +1,8 @@
 import PropTypes from 'prop-types'
 import { Query } from 'react-apollo'
 import { getHealthCheckQuery, topicTitles } from '../api/operations'
+import { Div, H1, H2, P, Span } from 'styled-system-html'
+import HealthCheckIcon from '../components/HealthCheckIcon'
 
 const HealthCheckResults = (props) => {
 
