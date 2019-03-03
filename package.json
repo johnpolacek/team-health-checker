@@ -7,8 +7,8 @@
     "start": "next start"
   },
   "dependencies": {
-    "apollo-boost": "^0.1.16",
-    "graphql": "^14.0.2",
+    "apollo-boost": "^0.1.28",
+    "graphql": "^14.1.1",
     "isomorphic-unfetch": "^3.0.0",
     "next": "^8.0.3",
     "prop-types": "^15.6.2",
@@ -18,8 +18,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/rebassjs/rebass.git"
+    "url": "https://github.com/johnpolacek/team-health-checker.git"
   },
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not ie <= 11",
+    "not op_mini all"
+  ],
   "author": "John Polacek",
   "license": "MIT"
 }
