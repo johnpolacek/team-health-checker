@@ -9,15 +9,5 @@ type HealthCheck @model {
 type HealthCheckResponse @model {
   id: ID! @isUnique
   healthCheck: HealthCheck! @relation(name: "HealthCheckInstance")
-  q1: Int!
-  q2: Int!
-  q3: Int!
-  q4: Int!
-  q5: Int!
-  q6: Int!
-  q7: Int!
-  q8: Int!
-  q9: Int!
-  q10: Int!
-  q11: Int!
+  ratings: [Int!]!
 }
