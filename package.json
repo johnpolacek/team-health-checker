@@ -2,15 +2,13 @@
   "name": "team-health-checker",
   "description": "Help your team improve by taking a Team Health Check",
   "version": "0.1.0",
-  "description": "Help your team improve by taking a Team Health Check",
   "scripts": {
-    "dev": "node server.js",
+    "dev": "next",
     "build": "next build",
     "now-build": "next build"
   },
   "dependencies": {
-    "ajv": "^6.8.1",
-    "apollo-boost": "^0.1.27",
+    "apollo-boost": "^0.1.28",
     "graphql": "^14.1.1",
     "isomorphic-unfetch": "^3.0.0",
     "next": "^8.0.3",
@@ -25,7 +23,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/johnpolacek/team-health-checker"
+    "url": "https://github.com/johnpolacek/team-health-checker.git"
   },
   "browserslist": [
     ">0.2%",
@@ -34,13 +32,5 @@
     "not op_mini all"
   ],
   "author": "John Polacek",
-  "license": "MIT",
-  "author": {
-    "name": "John Polacek",
-    "url": "https://github.com/johnpolacek/"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/johnpolacek/team-health-checker.git"
-  }
+  "license": "MIT"
 }
