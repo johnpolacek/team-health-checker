@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import App from '../components/App'
 import { Query } from 'react-apollo'
 import HealthCheck from '../components/HealthCheck'
+import HealthCheckBegin from '../components/HealthCheckBegin'
 import HealthCheckComplete from '../components/HealthCheckComplete'
 import { getHealthCheckQuery } from '../api/operations'
 
@@ -24,14 +25,8 @@ const Check = ({ id }) => {
           return (
             <>
               {{
-                READY: <>
-                  <h1>Loaded HealthCheck id: {id}</h1>
-                  <button onClick={() => setCurrView(views.IN_PROGRESS)}>Begin health check</button>
-                </>,
-                IN_PROGRESS: <HealthCheck id={id} onComplete={(data) => {
-                  console.log('COMPLETE!', data)
-                  setCurrView(views.COMPLETE)}} 
-                />,
+                READY: <HealthCheckBegin onBegin={() => setCurrView(views.IN_PROGRESS)} />,
+                IN_PROGRESS: <HealthCheck id={id} onComplete={() => { setCurrView(views.COMPLETE) }} />,
                 COMPLETE: <HealthCheckComplete id={id} />
               } [currView] }
             </>
