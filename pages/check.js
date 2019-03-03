@@ -1,9 +1,9 @@
 import React, { useState } from 'react'
 import App from '../components/App'
+import getHealthCheckQuery from '../api/operations'
 import { Query } from 'react-apollo'
 import HealthCheck from '../components/HealthCheck'
 import HealthCheckComplete from '../components/HealthCheckComplete'
-import { getHealthCheckQuery } from '../api/operations'
 
 const Check = ({ id }) => {
 
