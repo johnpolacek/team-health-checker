@@ -1,32 +1,35 @@
-import React from 'react'
+import React, { useState } from 'react'
 import App from '../components/App'
-import HealthCheckResults from '../components/HealthCheckResults'
 import { Query } from 'react-apollo'
-import { getHealthCheckQuery } from '../api/operations.js'
+import HealthCheck from '../components/HealthCheck'
+import HealthCheckResults from '../components/HealthCheckResults'
+import { getHealthCheckQuery } from '../api/operations'
 
-export default class extends React.Component {
-  
-  constructor(props) {
-    super(props)
+const Check = ({ id }) => {
+
+  const views = {
+    READY: 'READY',
+    IN_PROGRESS: 'IN_PROGRESS',
+    COMPLETE: 'COMPLETE'
   }
 
-  static getInitialProps ({ query: { id } }) {
-    return { id }
-  }
+  const [currView, setCurrView] = useState(views.READY) 
 
-  render () {
-    return <App>
-      <Query query={getHealthCheckQuery} variables={{id: this.props.id}}>
+  return (
+    <App>
+      <Query query={getHealthCheckQuery} variables={{id}}>
         {({ loading, error, data }) => {
-          if (loading) {
-            return <div>Loading...</div>
-          } else if (error || !data.HealthCheck) {
-            return <div>Error: Could not load HealthCheck with id: {this.props.id}</div>
-          } else {
-            return <HealthCheckResults id={this.props.id} />
-          }
+          if (loading) return <div>Loading...</div>
+          if (error || !data.HealthCheck) return <div>Error: Could not load HealthCheck with id: {id}</div>
+          return <HealthCheckResults id={id} />
         }}
       </Query>
     </App>
-  }
+  )
 }
+
+Check.getInitialProps = async ({ query }) => {
+  return { id: query.id }
+}
+
+export default Check

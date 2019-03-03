@@ -1,49 +1,44 @@
-import React from 'react'
+import React, { useState } from 'react'
 import App from '../components/App'
+import { Query } from 'react-apollo'
 import HealthCheck from '../components/HealthCheck'
 import HealthCheckBegin from '../components/HealthCheckBegin'
 import HealthCheckComplete from '../components/HealthCheckComplete'
-import { Query } from 'react-apollo'
-import { getHealthCheckQuery } from '../api/operations.js'
+import { getHealthCheckQuery } from '../api/operations'
 
-export default class extends React.Component {
+const Check = ({ id }) => {
 
-  constructor(props) {
-    super(props)
-
-    this.views = {
-      READY: 'READY',
-      IN_PROGRESS: 'IN_PROGRESS',
-      COMPLETE: 'COMPLETE'
-    }
-
-    this.state = {
-      view: this.views.READY
-    }
+  const views = {
+    READY: 'READY',
+    IN_PROGRESS: 'IN_PROGRESS',
+    COMPLETE: 'COMPLETE'
   }
 
-  static getInitialProps ({ query: { id } }) {
-    return { id }
-  }
+  const [currView, setCurrView] = useState(views.READY) 
 
-  render () {
-    
-    return <App>
-      <Query query={getHealthCheckQuery} variables={{id: this.props.id}}>
+  return (
+    <App>
+      <Query query={getHealthCheckQuery} variables={{id}}>
         {({ loading, error, data }) => {
           if (loading) return <div>Loading...</div>
-          if (error || !data.HealthCheck) return <div>Error: Could not load HealthCheck with id: {this.props.id}</div>
+          if (error || !data.HealthCheck) return <div>Error: Could not load HealthCheck with id: {id}</div>
           return (
             <>
               {{
-                READY: <HealthCheckBegin onBegin={() => this.setState({view: this.views.IN_PROGRESS})} />,
-                IN_PROGRESS: <HealthCheck id={this.props.id} onComplete={() => { this.setState({view: this.views.COMPLETE}) }} />,
-                COMPLETE: <HealthCheckComplete id={this.props.id} />
-              }[this.state.view]}
+                READY: <HealthCheckBegin onBegin={() => setCurrView(views.IN_PROGRESS)} />,
+                IN_PROGRESS: <HealthCheck id={id} onComplete={() => { setCurrView(views.COMPLETE) }} />,
+                COMPLETE: <HealthCheckComplete id={id} />
+              } [currView] }
             </>
           )
         }}
       </Query>
     </App>
-  }
+  )
 }
+
+Check.getInitialProps = async ({ query }) => {
+  return { id: query.id }
+}
+
+export default Check

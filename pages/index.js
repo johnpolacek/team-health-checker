@@ -1,16 +1,17 @@
+import Head from 'next/head'
 import App from '../components/App'
 import HealthCheckCreator from '../components/HealthCheckCreator'
-import HealthCheckIntro from '../components/HealthCheckIntro'
-import { Div, H1 } from 'styled-system-html'
-
-import Link from 'next/link'
+import { Div, H1, P } from 'styled-system-html'
 
 export default () => (
   <App>
-  	<Div textAlign="center" px={4} py={[0,0,4]}>
-	    <H1 color="base" pt={4} pb={3} fontSize={[5,6,7,8]}>Team Health Checker</H1>
-	    <HealthCheckIntro />
-      	<HealthCheckCreator />
-	  </Div>
+    <Head>
+      <title>Team Health Checker</title>
+    </Head>
+    <Div textAlign="center" py={54}>
+      <H1 color="base" pt={4} pb={3} fontSize={8} fontWeight="400">Team Health Checker</H1>
+      <P pb={5} fontSize={3}>Health checks help you find out how your team is doing, and work together to improve.</P>
+      <HealthCheckCreator />
+    </Div>
   </App>
 )

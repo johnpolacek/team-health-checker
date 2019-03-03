@@ -5,7 +5,6 @@
   "scripts": {
     "dev": "node server.js",
     "build": "next build",
-    "start": "NODE_ENV=production node server.js",
     "now-build": "next build"
   },
   "dependencies": {
@@ -14,16 +13,14 @@
     "graphql": "^14.1.1",
     "isomorphic-unfetch": "^3.0.0",
     "next": "^8.0.3",
-    "next-routes": "^1.4.2",
-    "path-match": "^1.2.4",
     "prop-types": "^15.6.2",
     "react": "^16.8.1",
     "react-apollo": "^2.4.1",
     "react-dom": "^16.8.1",
-    "react-rangeslider": "github:johnpolacek/react-rangeslider",
+    "react-range-slider": "^0.2.1",
+    "react-rangeslider": "^2.2.0",
     "styled-components": "^4.1.3",
-    "styled-system-html": "^2.0.7",
-    "use-window-width": "^1.0.0"
+    "styled-system-html": "^2.0.8"
   },
   "repository": {
     "type": "git",

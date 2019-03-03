@@ -1,11 +1,11 @@
-import { useState } from 'react'
+import { useState } from 'react';
 import { Mutation } from 'react-apollo'
-import { createHealthCheckMutation } from '../api/operations'
 import Link from 'next/link'
+import { createHealthCheckMutation } from '../api/operations'
 import { Div, H2, P, A, Input } from 'styled-system-html'
 import Button from './Button'
 
-const HealthCheckCreator = () => {
+export default (props) => {
   const [id, setId] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -49,6 +49,3 @@ const HealthCheckCreator = () => {
     </>
   )
 }
-
-export default HealthCheckCreator
-

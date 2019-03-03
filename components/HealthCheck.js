@@ -46,8 +46,8 @@ const HealthCheck = (props) => {
                           const color = rating === 0 ? 'red' : rating === 1 ? 'gray5' : 'green'
                           return (
                             <Div display="inline-block" px={[1,2,2]} py={['2px',2,2]}>
-                              <Div width={[100,120,200,240]} py={[3,3,3,4]} px={[1,2,3]} fontSize={[1,3]} key={'topicRating'+i} bg={color} borderRadius="8px" color="white" style={{overflow:'hidden'}}>
-                                <Div width={[24,36]} mx="auto" pb={[0,0,2]}>
+                              <Div width={[100,120,200,240]} py={3} px={[1,2,3]} fontSize={[1,3]} key={'topicRating'+i} bg={color} borderRadius="8px" color="white" style={{overflow:'hidden'}}>
+                                <Div width={[24,36]} mx="auto">
                                   <HealthCheckIcon fill="#fff" rating={rating} />
                                 </Div>
                                 <H2 height={[30,30,'auto']} fontSize={[0,1,2]}>{topicTitles[i]}</H2>
@@ -58,7 +58,7 @@ const HealthCheck = (props) => {
                       }
                     </Div>
                     <Button 
-                      bg={loading ? 'gray' : 'green'} color="white" fontSize={4} py={3} px={4} my={4} borderRadius="8px"
+                      bg={loading ? 'gray' : 'green'} color="white" fontSize={3} p={5} my={5} borderRadius="8px"
                       disabled={loading}
                       onClick={() => {
                         setLoading(true)
