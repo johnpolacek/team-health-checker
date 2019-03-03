@@ -528,6 +528,19 @@ In the last part, we created a component for a user to enter their responses to 
 
 To achieve this, as we did when creating a new health check, we will be creating a mutation, in this case a nested create mutation (see the [Graphcool docs](https://www.graph.cool/docs/reference/graphql-api/mutation-api-ol0yuoz6go#nested-create-mutations)), to add the health check response and link it to the id of the health check.
 
+*api/operations.js*
+
+~~~~
+...
+export const createHealthCheckResponseMutation = gql`
+  mutation createHealthCheckResponse($ratings: [Int!]!, $healthCheckId: ID!) {
+    createHealthCheckResponse(ratings: $ratings, healthCheckId: $healthCheckId) {
+      id
+    }
+  }
+`
+~~~~
+
 Update the health check component with a confirm step to send the completed response to the database.
 
 *components/HealthCheck.js*
@@ -537,14 +550,7 @@ import PropTypes from 'prop-types'
 import { useState } from 'react'
 import { Mutation } from 'react-apollo'
 import gql from 'graphql-tag'
-
-const createHealthCheckResponseMutation = gql`
-  mutation createHealthCheckResponse($ratings: [Int!]!, $healthCheckId: ID!) {
-    createHealthCheckResponse(ratings: $ratings, healthCheckId: $healthCheckId) {
-      id
-    }
-  }
-`
+import { createHealthCheckResponseMutation, getHealthCheckQuery, topicTitles } from '../api/operations'
 
 const HealthCheck = (props) => {
 
@@ -553,8 +559,6 @@ const HealthCheck = (props) => {
   const [isDone, setIsDone] = useState(false)
   const [loading, setLoading] = useState(false)
   
-  // const topicTitles = ['Easy to release','Suitable Process','Tech Quality','Value','Speed','Mission','Fun','Learning','Support','Pawns']
-  const topicTitles = ['Easy to release','Suitable Process']
   const currTopic = ratings.length
   const ratingLabels = {
     0: 'Sucky',
@@ -575,13 +579,17 @@ const HealthCheck = (props) => {
     <>
       {
         ratings.length === topicTitles.length ? (
-          <Mutation 
+          <Mutation
             mutation={createHealthCheckResponseMutation} 
             variables={{ ratings, healthCheckId: props.id }}
-            onCompleted={(data) => {
-              console.log('createHealthCheckResponseMutation onCompleted', data)
-              props.onComplete(ratings)
+            onCompleted={props.onComplete}
+            refetchQueries={() => {
+              return [{
+                query: getHealthCheckQuery,
+                variables: { id: props.id }
+              }]
             }}
+            awaitRefetchQueries={true}
           >
             {
               createMutation => {
@@ -639,7 +647,6 @@ HealthCheck.propTypes = {
 }
 
 export default HealthCheck
-
 ~~~~
 
 Now, for the HealthCheckComplete component, we will show a success message and a link to view the results for all of the team’s responses.
@@ -665,40 +672,6 @@ Next, we need a way to review all the health check responses and see the results
 
 Rather than defining our queries and mutations within the various components, it makes sense to bring them all together in one file and import them in as needed. While we’re at it, let’s put our `topicTitles` array in there as well since we’ll want to share that across our app.
 
-*api/operations.js*
-
-~~~~
-import gql from 'graphql-tag';
-
-export const topicTitles = ['Easy to release','Suitable Process','Tech Quality','Value','Speed','Mission','Fun','Learning','Support','Pawns']
-
-export const getHealthCheckQuery = gql`query HealthCheck($id: ID!) {
-  HealthCheck(id: $id) {
-    id
-    responses {
-      id
-      ratings
-    }
-  }
-}`
-
-export const createHealthCheckMutation = gql`
-  mutation createHealthCheck($responses: [HealthCheckresponsesHealthCheckResponse!]) {
-    createHealthCheck(responses: $responses) {
-      id
-    }
-  }
-`
-
-export const createHealthCheckResponseMutation = gql`
-  mutation createHealthCheckResponse($ratings: [Int!]!, $healthCheckId: ID!) {
-    createHealthCheckResponse(ratings: $ratings, healthCheckId: $healthCheckId) {
-      id
-    }
-  }
-`
-~~~~
-
 To display the results, we can iterate through the responses and increment the values (Awesome/OK/Sucky) for each topic.
 
 *components/HealthCheckResults.js*
@@ -707,8 +680,6 @@ To display the results, we can iterate through the responses and increment the v
 import PropTypes from 'prop-types'
 import { Query } from 'react-apollo'
 import { getHealthCheckQuery, topicTitles } from '../api/operations'
-import { Div, H1, H2, P, Span } from 'styled-system-html'
-import HealthCheckIcon from '../components/HealthCheckIcon'
 
 const HealthCheckResults = (props) => {
 
@@ -726,30 +697,20 @@ const HealthCheckResults = (props) => {
         })
 
         return (
-          <Div textAlign="center" py={[4,5]} mb={[4,5]}>
-            <H1 color="base" pb={3} fontSize={[5,6]} fontWeight="400">Team Health Check Results</H1>
-            <P fontSize={[2,3]} pb={[3,4]}>{data.HealthCheck.responses.length} responses so far. Here are the results...</P>
-            {
-              topicRatings.map((topic, topicIndex) => {
-                const rating = Math.round((topic[1] + (topic[2] * 2))/data.HealthCheck.responses.length)
-                const color = rating === 0 ? 'red' : rating === 1 ? 'gray5' : 'green'
-                return (
-                  <Div display="inline-block" p={3} m={3} fontSize={4} key={'topicRating'+topicIndex} bg={color} borderRadius="8px" color="white">
-                    <Div width={48} mx="auto">
-                      <HealthCheckIcon fill="#fff" rating={rating} />
-                    </Div>
-                    <H2 width={240} mx="auto" borderBottom="solid 1px" pb={3} px={4} mb={3} borderColor="#fff" fontSize={1} fontWeight="bold">{topicTitles[topicIndex]}</H2>
-                    <Div fontSize={2}>
-                      <P>Awesome: {topic[2]}</P>
-                      <P>OK: {topic[1]}</P>
-                      <P>Sucky: {topic[0]}</P>
-                    </Div>
-                    <P py={2} fontSize={1} fontStyle="italic">( avg <Span fontSize={0}>{((topic[1] + (topic[2] * 2))/data.HealthCheck.responses.length).toFixed(2)}</Span> )</P>
-                  </Div>
-                )
-              })
-            }
-          </Div>
+          <>
+          	<p>Here are the results:</p>
+          	{
+          		topicRatings.map((topic, topicIndex) => 
+          			<div key={'topicRating'+topicIndex}>
+          				<h3>{topicTitles[topicIndex]}</h3>
+          				<p>Awesome: {topic[2]}</p>
+          				<p>OK: {topic[1]}</p>
+          				<p>Sucky: {topic[0]}</p>
+          				<p>Average: {topic[1] + (topic[2] * 2)/data.HealthCheck.responses.length}</p>
+          			</div>
+          		)
+          	}
+          </>
         )
       }}
     </Query>
