@@ -1,6 +1,6 @@
 import React from 'react'
 import App from '../components/App'
-import getHealthCheckQuery from '../api/operations'
+import { getHealthCheckQuery } from '../api/operations'
 import { Query } from 'react-apollo'
 
 const HealthCheck = ({ id }) => (
