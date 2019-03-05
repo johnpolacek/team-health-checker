@@ -1,19 +1,10 @@
 import React, { useState } from 'react'
 import App from '../components/App'
-import { Query } from 'react-apollo'
-import HealthCheck from '../components/HealthCheck'
 import HealthCheckResults from '../components/HealthCheckResults'
+import { Query } from 'react-apollo'
 import { getHealthCheckQuery } from '../api/operations'
 
-const Check = ({ id }) => {
-
-  const views = {
-    READY: 'READY',
-    IN_PROGRESS: 'IN_PROGRESS',
-    COMPLETE: 'COMPLETE'
-  }
-
-  const [currView, setCurrView] = useState(views.READY) 
+const Results = ({ id }) => {
 
   return (
     <App>
@@ -28,8 +19,8 @@ const Check = ({ id }) => {
   )
 }
 
-Check.getInitialProps = async ({ query }) => {
+Results.getInitialProps = async ({ query }) => {
   return { id: query.id }
 }
 
-export default Check
+export default Results
