@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Mutation } from 'react-apollo'
-import createHealthCheckMutation from '../api/operations'
+import { createHealthCheckMutation } from '../api/operations'
 import Link from 'next/link'
 
 const HealthCheckCreator = (props) => {

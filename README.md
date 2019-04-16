@@ -199,11 +199,6 @@ Then, we will update `package.json` with a new build command for now.
 
 Let’s see what we have so far.
 
-
-
-NEED THIS:
-https://github.com/zeit/now-cli/pull/1883
-
 ~~~~
 now dev
 ~~~~
@@ -289,7 +284,7 @@ export const createHealthCheckMutation = gql`
 ~~~~
 import { useState } from 'react';
 import { Mutation } from 'react-apollo'
-import createHealthCheckMutation from '../api/operations'
+import { createHealthCheckMutation } from '../api/operations'
 import Link from 'next/link'
 
 const HealthCheckCreator = (props) => {
