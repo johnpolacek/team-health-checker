@@ -8,7 +8,7 @@ const HealthCheck = ({ id }) => (
       <Query query={getHealthCheckQuery} variables={{id}}>
         {({ loading, error, data }) => {
           if (loading) return <div>Loading...</div>
-          if (error || !data.HealthCheck) return <div>Error: Could not load HealthCheck with id: {this.props.id}</div>
+          if (error || !data.HealthCheck) return <div>Error: Could not load HealthCheck with id: {id}</div>
           return (
             <h1>Loaded HealthCheck id: {id}</h1>
           )
