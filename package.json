@@ -7,6 +7,8 @@
     "now-build": "next build"
   },
   "dependencies": {
+    "@emotion/core": "^10.0.17",
+    "@mdx-js/react": "^1.4.4",
     "apollo-boost": "^0.1.28",
     "graphql": "^14.1.1",
     "isomorphic-unfetch": "^3.0.0",
@@ -14,7 +16,8 @@
     "prop-types": "^15.6.2",
     "react": "^16.8.1",
     "react-apollo": "^2.4.1",
-    "react-dom": "^16.8.1"
+    "react-dom": "^16.8.1",
+    "theme-ui": "^0.2.41"
   },
   "repository": {
     "type": "git",

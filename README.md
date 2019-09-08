@@ -1,5 +1,8 @@
-# Building a Team Health Check Web App with React, Apollo, Next.js and Cypress
+# Building and Deploying a SSR Web App
+###### with React, Apollo, Next.js, Now, Theme UI and Cypress
 
+----
+<br/>
 
 ## Part 1
 
@@ -15,11 +18,11 @@
 
 The ability to build isomorphic (~aka universal) web apps is that the same React and JS code can run on the client and the server. 
 
-The benefit here is that you can get a fast page load on that first visit, where, just like on a traditional server-side web architecutre, server sends just what is needed to the client, the initial minified render of the page, inlining critical styles and the app bundle. From there the client takes over, providing the faster rendering experience you can get from a single-page app.
+The benefit here is that you can get a fast page load on that first visit, where, just like on a traditional server-side web architecture, the server sends just what is needed to the client, the initial minified render of the page, inlining critical styles and the app bundle. From there the client takes over, providing the faster rendering experience you can get from a single-page app when navigating between views.
 
 #### Next.js
 
-With Next.js, for each route in the app, we load the necessary data for its inital component tree and render the page server-side to send to the browser, and then our client-side React app will get its initial state and handle the rest from there.
+With [Next.js](https://nextjs.org/), for each route in the app, we load the necessary data for its inital component tree and render the page server-side to send to the browser, and then our client-side React app will get its initial state and handle the rest from there.
 
 ### Apollo and GraphQL
 
@@ -790,83 +793,93 @@ A key aspect of our GraphQL api is that the getHealthCheckQuery is cached, so wh
 ##Part 5
 
 
-We have a basic working proof-of-concept for the Health Check web app. Now it is time to improve the design and make it more user-friendly.
+Now that we have a basic working proof-of-concept, it is time to improve the design.
 
-You don’t need to use CSS-in-JS to build React Apps, but styles are often closely tied to state at the component layer, so for that and other reasons, it is quite popular. Let’s do it!
+You don’t need to use CSS-in-JS to build React Apps, but styles are often closely tied to state at the component layer. For that and [other reasons](https://jxnblk.com/blog/why-you-should-learn-css-in-js/), it is quite popular. Let’s do it!
 
-First off, let’s set up some theming configuration for colors, typography and spacing. To do this, we will use a [ThemeProvider component](https://www.styled-components.com/docs/advanced#theming) from [styled components](https://www.styled-components.com/)
+First off, let’s set up some theming configuration for colors, typography and spacing. To do this, we will use [Theme UI](https://theme-ui.com/), a library for building designs with a constraint-based design system (a theme!). 
+
+For more information on Theme UI, check out the [documentation](https://theme-ui.com/getting-started) which has more detail about the steps below.
 
 ~~~~
-$ npm i styled-components
+$ npm i theme-ui @emotion/core @mdx-js/react
 ~~~~
 
-ThemeProvider doesn’t do much without a theme, so let’s think about our design system. What typography do we need? What colors should we use?
-
-If we were a brand, we might want a webfont that would help differentiate us from others on the web. Since that is not the case, it seems like a good decision for performance reasons to use a [web safe CSS font stack](https://www.cssfontstack.com/). We can also define a type scale and weights to use in our app.
-
-When it comes to colors, this is an exercise for teams to take together so we should try to make it fun, so choosing some brighter colors is appropriate. Remember to choose a color palette that is accessibility - see [these 90 examples of A11Y compliant color combos](http://clrs.cc/a11y/)
-
-We can define all the named colors available to the theme (pink, blue, red, green, etc). We can create color ranges for each of the named colors from light to dark, and from those, we may wish to further abstract color references to those named colors (primary, secondary, warning, error, success, etc).
-
-Let’s define these aspects of our design theme in code so we can use them throughout our project.
+First, we will define the color, typographic and layout scale properties in a `Theme.js` file.
 
 *components/Theme.js*
 
 ~~~~
-export const font = `'avenir next', avenir, helvetica, arial, sans-serif`;
-export const monospace = `"SF Mono", "Roboto Mono", Menlo, monospace`
-export const fontSizes = [12,14,16,20,24,32,48,64,72,96]
-export const weights = [200,400,700]
-
-export const colors = {
-  "base": "#4169e1",
-  "black": "#000",
-  "blue": "#4169e1",
-  ....
-}
-
-export const breakpoints = ['32em','48em','64em','80em']
-export const space = [0,4,8,16,32,64,128]
-export const radius = 4
-
 export default {
-  font,
-  monospace,
-  fontFamilies,
-  weights,
-  fontSizes,
-  colors,
-  breakpoints,
-  space,
-  radius
+  fonts: {
+    body: `'avenir next', avenir, helvetica, arial, sans-serif`,
+  },
+  fontSizes: [12,14,16,20,24,32,48,64,72,96],
+  fontWeights: {
+    lite: 200,
+    body: 400,
+    heading: 700,
+  },
+  lineHeights: {
+    body: 1.5,
+    heading: 1.125,
+  },
+  colors: {
+    base: "#4169e1",
+    black: "#000",
+    blue: "#4169e1",
+    cyan: "#41b9e1",
+    gray: "#aeb3c0",
+    green: "#41e169",
+    purple: "#6941e1",
+    orange: "#fba100",
+    pink: "#e141b9",
+    red: "#ee5555",
+    white: "#fff",
+    yellow: "#FFDD22",
+  },
+  space: [0,4,8,16,32,64,128],
+  breakpoints: ['32em','48em','64em','80em'],
+  radii: [4]
 }
 ~~~~
 
-[Next.js](https://nextjs.org) has a [bare-bones example](https://github.com/zeit/next.js/tree/master/examples/with-styled-components) of using [styled-components](https://www.styled-components.com/) with server-side rendering so that we can ship a minimal amount of CSS on page load. 
+To get Theme UI to work with Next.js, there is some additional configuration we need to do. We will take what we have now and applying updates from the [Next.js Theme UI Example](https://github.com/system-ui/theme-ui/tree/master/examples/next).
 
-To style our components with our theme, we will use a [ThemeProvider](https://www.styled-components.com/docs/advanced) component from styled components. This works very similarly to our ApolloProvider wrapper component that provides access to the Apollo client to all its component children.
-
-The killer feature here is that no matter which page someone lands on, they will automatically get the critical css for that page inlined into the document head.
+To give our pages and components access to this theme file, we will use Theme UI’s `ThemeProvider` in our `App` component.
 
 *pages/_app.js*
 
 ~~~~
 import App, {Container} from 'next/app'
 import React from 'react'
-import { ThemeProvider } from 'styled-components'
-import theme from '../components/Theme'
+import { ThemeProvider, Styled } from 'theme-ui'
 import withApolloClient from '../lib/with-apollo-client'
 import { ApolloProvider } from 'react-apollo'
+import theme from '../components/Theme'
+
 
 class MyApp extends App {
+	static async getInitialProps({ Component, ctx }) {
+    let pageProps = {}
+
+    if (Component.getInitialProps) {
+      pageProps = await Component.getInitialProps(ctx)
+    }
+
+    return { pageProps }
+  }
+
   render () {
     const {Component, pageProps, apolloClient} = this.props
     return <Container>
     	<ThemeProvider theme={theme}>
-	      <ApolloProvider client={apolloClient}>
-	        <Component {...pageProps} />
-	      </ApolloProvider>
-	    </ThemeProvider>
+			<ApolloProvider client={apolloClient}>
+				<Styled.root>
+	            <Component {...pageProps} />
+	          </Styled.root>
+			</ApolloProvider>
+		</ThemeProvider>
     </Container>
   }
 }
@@ -874,99 +887,114 @@ class MyApp extends App {
 export default withApolloClient(MyApp)
 ~~~~
 
-We can also apply [normalize.css](https://necolas.github.io/normalize.css/) and any other css we want to apply to every page across our web app. Next.js has a [custom Document component](https://nextjs.org/docs/#custom-document) that makes this possible.
+To avoid a flash or unstyled content, we use the [Document component](https://nextjs.org/docs/#custom-document) component from Next.js. We can also use Emotion’s `Global` combined with our `Theme` props to apply base styling across all the pages of our app.
 
 *pages/_document.js*
 
 ~~~~
-import Document, { Head, Main, NextScript } from 'next/document'
-import { ServerStyleSheet } from 'styled-components'
-import theme from '../components/Theme.js'
+import React from 'react'
+import Document, { Html, Head, Main, NextScript } from 'next/document'
+import { Global, css } from '@emotion/core'
+import theme from '../components/Theme'
 
-export default class MyDocument extends Document {
-  static getInitialProps ({ renderPage }) {
-    const sheet = new ServerStyleSheet()
-    const page = renderPage(App => props => sheet.collectStyles(<App {...props} />))
-    const styleTags = sheet.getStyleElement()
-    return { ...page, styleTags }
+class MyDocument extends Document {
+  static async getInitialProps(ctx) {
+    const initialProps = await Document.getInitialProps(ctx)
+    return initialProps
   }
 
-  render () {
+  render() {
     return (
-      <html lang="en">
-        <Head>
-          <meta charSet="utf-8" />
-          <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-          <meta name="theme-color" content="#000000" />
-          <style>{`
-            button,hr,input{overflow:visible}progress,sub,sup{vertical-align:baseline}[type=checkbox],[type=radio],legend{box-sizing:border-box;padding:0}html{line-height:1.2;-webkit-text-size-adjust:100%}body{margin:0}h1{font-size:2em;margin:.67em 0}hr{box-sizing:content-box;height:0}code,kbd,pre,samp{font-family:monospace,monospace;font-size:1em}a{background-color:transparent}abbr[title]{border-bottom:none;text-decoration:underline;text-decoration:underline dotted}b,strong{font-weight:bolder}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative}sub{bottom:-.25em}sup{top:-.5em}img{border-style:none}button,input,optgroup,select,textarea{font-family:inherit;font-size:100%;line-height:1.15;margin:0}button,select{text-transform:none}[type=button],[type=reset],[type=submit],button{-webkit-appearance:button}[type=button]::-moz-focus-inner,[type=reset]::-moz-focus-inner,[type=submit]::-moz-focus-inner,button::-moz-focus-inner{border-style:none;padding:0}[type=button]:-moz-focusring,[type=reset]:-moz-focusring,[type=submit]:-moz-focusring,button:-moz-focusring{outline:ButtonText dotted 1px}fieldset{padding:.35em .75em .625em}legend{color:inherit;display:table;max-width:100%;white-space:normal}textarea{overflow:auto}[type=number]::-webkit-inner-spin-button,[type=number]::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}[type=search]::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}details{display:block}summary{display:list-item}[hidden],template{display:none}
-            html{box-sizing:border-box;} *,*:before,*:after{box-sizing:inherit;} 
-            body{margin:0;font-family:`+theme.font+`;} 
-            button,input[type=submit]{cursor:pointer;}
-            p{line-height:1.5;margin:0;}
-            ul{margin-top:0;}
-            select{padding:8px;}
-            h1,h2,h3,h4,h5,h6,.h1,.h2,.h3,.h4,.h5,.h6{text-rendering:optimizelegibility;margin:0;font-weight:400;}
-            input,select,textarea,button{padding:4px;border:solid 2px #aed7ff;font-size:16px;font-family:`+theme.font+`,sans-serif;}
-            select{-webkit-appearance:menulist;height:32px;}
-            table{border-collapse:collapse;}
-            input{text-align:inherit;padding-left:4px;}
-            button, button:focus { outline: none; border: none; }
-            :focus:not(:focus-visible) { outline: none; }
-          `}</style>
-          {this.props.styleTags}
-        </Head>
+      <Html lang="en">
         <body>
+          <Global
+            styles={css`
+              button,hr,input{overflow:visible}progress,sub,sup{vertical-align:baseline}[type=checkbox],[type=radio],legend{box-sizing:border-box;padding:0}html{line-height:1.2;-webkit-text-size-adjust:100%}body{margin:0}hr{box-sizing:content-box;height:0}code,kbd,pre,samp{font-family:monospace,monospace;font-size:1em}a{background-color:transparent}abbr[title]{border-bottom:none;text-decoration:underline;text-decoration:underline dotted}b,strong{font-weight:bolder}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative}sub{bottom:-.25em}sup{top:-.5em}img{border-style:none}button,input,optgroup,select,textarea{font-family:inherit;font-size:100%;line-height:1.15;margin:0}button,select{text-transform:none}[type=button],[type=reset],[type=submit],button{-webkit-appearance:button}[type=button]::-moz-focus-inner,[type=reset]::-moz-focus-inner,[type=submit]::-moz-focus-inner,button::-moz-focus-inner{border-style:none;padding:0}[type=button]:-moz-focusring,[type=reset]:-moz-focusring,[type=submit]:-moz-focusring,button:-moz-focusring{outline:ButtonText dotted 1px}fieldset{padding:.35em .75em .625em}legend{color:inherit;display:table;max-width:100%;white-space:normal}textarea{overflow:auto}[type=number]::-webkit-inner-spin-button,[type=number]::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}[type=search]::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}details{display:block}summary{display:list-item}[hidden],template{display:none}
+              html{box-sizing:border-box;} *,*:before,*:after{box-sizing:inherit;} 
+              body{margin:0;font-family:${theme.fonts.body};font-size:${theme.fontSizes[1]}px;} 
+              button,input[type=submit]{cursor:pointer;background:${theme.colors.primary};color:white;padding:${theme.space[3]}px ${theme.space[4]}px;border-radius:${theme.radii[0]}px;border:none;font-size:${theme.fontSizes[]}px;}
+              p{line-height:${theme.lineHeights.body};}
+              ul{margin-top:0;}
+              select{padding:8px;}
+              h1,h2,h3,h4,h5,h6{text-rendering:optimizelegibility;line-height:${theme.lineHeights.heading};}
+              input,select,textarea{padding:4px;border:solid 2px #aed7ff;font-size:16px;font-family:${theme.fonts.body};}
+              select{-webkit-appearance:menulist;height:32px;}
+              table{border-collapse:collapse;}
+              input{text-align:inherit;padding-left:4px;}
+              a{color:${theme.colors.primary}; }
+            `}
+          />
           <Main />
           <NextScript />
         </body>
-      </html>
-    )
+      </Html>
+    );
   }
 }
+
+export default MyDocument;
 ~~~~
 
-We can now remove the styling from `App.js`.
+Now when we load `localhost:3000` we will see some styling already applied to this page. To add more styling to our components, we will be using Theme UI and the `sx` prop. 
 
-*components/App.js*
+> The `sx` prop lets you style elements inline, using values from your theme. To use the `sx` prop, add the custom `/** @jsx jsx */` pragma comment to the top of your module and import the `jsx` function.
+
+Take a look at the [Theme UI Docs](https://theme-ui.com/getting-started) for more.
+
+Let’s get started by making a `Heading` component that we can use on multiple views in the app.
+
+*components/Heading.js*
 
 ~~~~
-export default ({ children }) => (
-  <main>
-    {children}
-  </main>
+import { jsx } from 'theme-ui'
+
+export default (props) => (
+  <h1 sx={{
+    fontSize:6,
+    pb:3,
+    color:'primary',
+    fontWeight: 400,
+  }}>{props.children}</h1>
 )
 ~~~~
 
-[Styled System](https://jxnblk.com/styled-system/) is a library that provides responsive, theme-based style props for our React UI components. By default, it works with [styled components](https://styled-components.com), and we will be using a library called [Styled System HTML](https://johnpolacek.github.io/styled-system-html/) which gives us a set of low level html element components ready for stateful theming.
-
-~~~~
-$ npm i styled-system-html
-~~~~
-
-Now that we have our theme settings and some low level UI components, let’s make our landing page a little more appealing.
-
-We can switch the html elements to our components which can accept style props and data from our design theme. Eventually, we can abstract these further into UI components with default styling props so we don't need to repeatedly declare padding, font size, etc.
+Let’s change the `h1` on our landing page to our new `Heading` component and add some layout styling to the page.
 
 *pages/index.js*
 
 ~~~~
+/** @jsx jsx */
+import { jsx } from 'theme-ui'
+import Head from 'next/head'
 import App from '../components/App'
 import HealthCheckCreator from '../components/HealthCheckCreator'
-import { Div, H1, P } from 'styled-system-html'
+import Heading from '../components/Heading'
 
 export default () => (
   <App>
-  	<Div textAlign="center" py={54}>
-	    <H1 color="base" pt={4} pb={3} fontSize={8} fontWeight="400">Team Health Checker</H1>
-	    <P pb={5} fontSize={3}>Health checks help you find out how your team is doing, and work together to improve.</P>
-	    <HealthCheckCreator />
-	</Div>
+    <Head>
+      <title>Team Health Checker</title>
+    </Head>
+    <div sx={{
+      height: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center',
+      textAlign: 'center',
+      px: 4,
+      pb: 5,
+    }}>
+      <Heading>Team Health Checker</Heading>
+      <p>Health checks help you find out how your team is doing, and work together to improve.</p>
+      <p sx={{pb:4}}>This health check is based on <a href="https://labs.spotify.com/2014/09/16/squad-health-check-model/">Spotify’s Squad Health Check Model</a>.</p>
+      <HealthCheckCreator />
+    </div>
   </App>
 )
 ~~~~
 
-Next up, we will update
+Next up, we will update all our other components.
 
 *components/HealthCheckIntro.js*
 
