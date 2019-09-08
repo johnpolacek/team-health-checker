@@ -306,7 +306,7 @@ const HealthCheckCreator = (props) => {
               <input readonly type="text" value={window.location.href+'/check/'+id} /> 
             </div>
             <p>
-              <Link prefetch href={'/check/?id='+id}>
+              <Link prefetch href={'/check/'+id}>
                 <a>View health check</a>
               </Link>
             </p>
@@ -378,14 +378,19 @@ For the next part of developing this app, we will allow people to fill in the he
 
 We won’t worry about styling or a great user experience just yet, as this is just an exploratory proof-of-concept at this point.
 
-First, let’s define our topic titles for our health check api (our health check is based on [Spotify’s Squad Health Check](https://labs.spotify.com/2014/09/16/squad-health-check-model/).
+First, let’s define our topic titles for our health check api (our health check is based on [Spotify’s Squad Health Check](https://labs.spotify.com/2014/09/16/squad-health-check-model/) and the labels for the three possible ratings. 
 
 *api/operations.js*
 
 ~~~~
 ...
 export const topicTitles = ['Easy to release','Suitable Process','Tech Quality','Value','Speed','Mission','Fun','Learning','Support','Pawns']
-....
+export const ratingLabels = {
+  0: 'Sucky',
+  1: 'OK',
+  2: 'Awesome'
+}
+...
 ~~~~
 
 Let’s add a component that allows people to provide responses to each of the topics.
@@ -404,7 +409,7 @@ Let’s add a component that allows people to provide responses to each of the t
 ~~~~
 import PropTypes from 'prop-types'
 import { useState } from 'react'
-import { topicTitles } from '../api/operations'
+import { topicTitles, ratingLabels } from '../api/operations'
 
 const HealthCheck = (props) => {
 
@@ -558,11 +563,6 @@ const HealthCheck = (props) => {
   const [loading, setLoading] = useState(false)
   
   const currTopic = ratings.length
-  const ratingLabels = {
-    0: 'Sucky',
-    1: 'OK',
-    2: 'Awesome'
-  }
 
   const onChange = e => {
     setCurrRating(parseInt(e.target.value))
@@ -1026,7 +1026,7 @@ export default (props) => {
           <>
             <h2>You created a new Health Check!</h2>
             <p sx={{p:4, fontSize:3}}>
-              <Link prefetch href={'/check/?id='+id}>
+              <Link prefetch href={'/check/'+id}>
                 <a>View health check</a>
               </Link>
             </p>
@@ -1109,18 +1109,21 @@ return (
 ...
 ~~~~
 
-
-
-
-
-
-
-
-
-
-
-
 Now onto the health check itself. Let’s make a `HealthCheckTopic` component for collecting the responses.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 The health check topics themselves give us an opportunity to have a little more fun with the design. For the control input to give the rating, we can use React Rangeslider.
 
@@ -1169,8 +1172,7 @@ import Slider from 'react-rangeslider'
 import HealthCheckIcon from './HealthCheckIcon'
 import { Div, H2, Span, Input, Label } from 'styled-system-html'
 import Button from './Button'
-import { topicTitles } from '../api/operations'
-import { ratingLabels } from './HealthCheck'
+import { topicTitles, RatingLabels } from '../api/operations'
 
 const HealthCheckTopic = (props) => {
 
@@ -1217,7 +1219,7 @@ import PropTypes from 'prop-types'
 import { useState } from 'react'
 import { Mutation } from 'react-apollo'
 import gql from 'graphql-tag'
-import { createHealthCheckResponseMutation, getHealthCheckQuery, topicTitles } from '../api/operations'
+import { createHealthCheckResponseMutation, getHealthCheckQuery, topicTitles, ratingLabels } from '../api/operations'
 import HealthCheckTopic from './HealthCheckTopic'
 import HealthCheckIcon from './HealthCheckIcon'
 import Button from './Button.js'
