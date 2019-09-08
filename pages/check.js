@@ -2,6 +2,8 @@ import React, { useState } from 'react'
 import App from '../components/App'
 import { getHealthCheckQuery } from '../api/operations'
 import { Query } from 'react-apollo'
+import PageContainer from '../components/PageContainer'
+import HealthCheckBegin from '../components/HealthCheckBegin'
 import HealthCheck from '../components/HealthCheck'
 import HealthCheckComplete from '../components/HealthCheckComplete'
 
@@ -22,19 +24,16 @@ const Check = ({ id }) => {
           if (loading) return <div>Loading...</div>
           if (error || !data.HealthCheck) return <div>Error: Could not load HealthCheck with id: {id}</div>
           return (
-            <>
+            <PageContainer>
               {{
-                READY: <>
-                  <h1>Loaded HealthCheck id: {id}</h1>
-                  <button onClick={() => setCurrView(views.IN_PROGRESS)}>Begin health check</button>
-                </>,
+                READY:<HealthCheckBegin onBegin={() => setCurrView(views.IN_PROGRESS)} />,
                 IN_PROGRESS: <HealthCheck id={id} onComplete={(data) => {
                   console.log('COMPLETE!', data)
                   setCurrView(views.COMPLETE)}} 
                 />,
                 COMPLETE: <HealthCheckComplete id={id} />
               } [currView] }
-            </>
+            </PageContainer>
           )
         }}
       </Query>

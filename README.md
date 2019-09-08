@@ -941,11 +941,32 @@ Now when we load `localhost:3000` we will see some styling already applied to th
 
 Take a look at the [Theme UI Docs](https://theme-ui.com/getting-started) for more.
 
-Let’s get started by making a `Heading` component that we can use on multiple views in the app.
+Let’s get started by making a `PageContainer` and `Heading` components that we can use on multiple views in the app.
+
+*components/PageContainer.js*
+
+~~~~
+/** @jsx jsx */
+import { jsx } from 'theme-ui'
+
+export default (props) => (
+  <div sx={{
+    height: '100vh',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    textAlign: 'center',
+    px: 4,
+    pb: 5,
+  }}>{props.children}</div>
+)
+~~~~
 
 *components/Heading.js*
 
 ~~~~
+/** @jsx jsx */
 import { jsx } from 'theme-ui'
 
 export default (props) => (
@@ -958,16 +979,15 @@ export default (props) => (
 )
 ~~~~
 
-Let’s change the `h1` on our landing page to our new `Heading` component and add some layout styling to the page.
+Let’s change the `h1` on our landing page to our new `Heading` component and wrap the content in `PageContainer`.
 
 *pages/index.js*
 
 ~~~~
-/** @jsx jsx */
-import { jsx } from 'theme-ui'
 import Head from 'next/head'
 import App from '../components/App'
 import HealthCheckCreator from '../components/HealthCheckCreator'
+import PageContainer from '../components/PageContainer'
 import Heading from '../components/Heading'
 
 export default () => (
@@ -975,49 +995,25 @@ export default () => (
     <Head>
       <title>Team Health Checker</title>
     </Head>
-    <div sx={{
-      height: '100vh',
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'center',
-      alignItems: 'center',
-      textAlign: 'center',
-      px: 4,
-      pb: 5,
-    }}>
+    <PageContainer>
       <Heading>Team Health Checker</Heading>
-      <p>Health checks help you find out how your team is doing, and work together to improve.</p>
-      <p sx={{pb:4}}>This health check is based on <a href="https://labs.spotify.com/2014/09/16/squad-health-check-model/">Spotify’s Squad Health Check Model</a>.</p>
       <HealthCheckCreator />
-    </div>
+    </PageContainer>
   </App>
 )
 ~~~~
 
-Next up, we will update all our other components.
-
-*components/HealthCheckIntro.js*
-
-~~~~
-import { Div, P, A } from 'styled-system-html'
-
-export default () => (
-	<Div px={3} pt={3} pb={4} fontSize={[2,2,3]}>
-    <P pb={3}>Health checks help you find out how your team is doing, and work together to improve.</P>
-    <P pb={3}>This health check is based on <A color="cyan" href="https://labs.spotify.com/2014/09/16/squad-health-check-model/" style={{whiteSpace:'nowrap'}}>Spotify’s Squad Health Check Model</A>.</P>
-  </Div>
-)
-~~~~
+Next up, we will update `HealthCheckCreator`.
 
 *components/HealthCheckCreator.js*
 
 ~~~~
+/** @jsx jsx */
+import { jsx } from 'theme-ui'
 import { useState } from 'react';
 import { Mutation } from 'react-apollo'
-import Link from 'next/link'
 import { createHealthCheckMutation } from '../api/operations'
-import { Div, H2, P, A, Input } from 'styled-system-html'
-import Button from './Button'
+import Link from 'next/link'
 
 export default (props) => {
   const [id, setId] = useState(null);
@@ -1028,36 +1024,36 @@ export default (props) => {
       {
         id ? (
           <>
-            <H2 color="green" pb={4} fontSize={[4,5]} fontWeight="600">You created a new Health Check!</H2>
-            <P py={3}>
-              <Link prefetch href={'/check/'+id}>
-                <A href={'/check/'+id} color="base" fontSize={[3,4]}>Go To Health Check</A>
+            <h2>You created a new Health Check!</h2>
+            <p sx={{p:4, fontSize:3}}>
+              <Link prefetch href={'/check/?id='+id}>
+                <a>View health check</a>
               </Link>
-            </P>
-            <Div py={4} mb={4}>
-              <P pb={3} fontSize={[2,3]}>You can share it with your friends via&nbsp;this&nbsp;link:</P>
-              <Input width={340} fontSize={[0,1,2]} p={2} readonly type="text" value={window.location.href+'check/'+id} /> 
-            </Div>
+            </p>
+            <div sx={{width:'100%', maxWidth:'480px', p:3}}>
+              <p>You can share it with your friends by sharing this link:</p>
+              <input sx={{width:'100%', p:3}} readonly type="text" value={window.location.href+'/check/'+id} /> 
+            </div>
           </>
         ) : (
-          <Mutation 
-            mutation={createHealthCheckMutation} 
-            onCompleted={(data) => {setId(data.createHealthCheck.id)}}
-          >
-            {
-              createMutation => <Button 
-                disabled={loading}
-                bg={loading ? 'gray' : 'green'} color="white" 
-                onClick={() => {
-                  if (!loading) {
+          <>
+            <p>Health checks help you find out how your team is doing, and work together&nbsp;to&nbsp;improve.</p>
+            <p sx={{pb:4}}>This health check is based on <a sx={{whiteSpace:'nowrap'}} href="https://labs.spotify.com/2014/09/16/squad-health-check-model/">Spotify’s Squad Health Check Model</a>.</p>
+            <Mutation 
+              mutation={createHealthCheckMutation} 
+              onCompleted={(data) => {setId(data.createHealthCheck.id)}}
+            >
+              {
+                createMutation => <button 
+                  onClick={() => {
                     setLoading(true)
                     createMutation()
-                  }
-                }}
-                children = {loading ? 'Loading...' : 'Create New Health Check'}
-              />
-            }
-          </Mutation>
+                  }}
+                  children = {loading ? 'Loading...' : 'Create New Health Check'}
+                />
+              }
+            </Mutation>
+          </>
         )
       }
     </>
@@ -1065,49 +1061,26 @@ export default (props) => {
 }
 ~~~~
 
-In every project, there comes a time when you need to create a Button component. Now is that time.
-
-*src/components/Button.js*
-
-~~~~
-import React from 'react'
-import {Button as Btn} from 'styled-system-html'
-
-export default (props) => (
-	<Btn
-	    fontSize={[2,3,4]}
-	    m={0}
-	    py={3}
-	    px={4}
-	    color='white'
-	    bg='blue'
-	    border={0}
-	    borderRadius="8px"
-		{...props}
-	/>
-)
-~~~~
-
-Next up, let’s create a new component for the beginning of the health check to make it more friendly to anyone that lands on the link shared with them.
+Let’s create a new component for the beginning of the health check to make it more friendly to anyone that lands on the link shared with them.
 
 *components/HealthCheckBegin.js*
 
 ~~~~
+/** @jsx jsx */
+import { jsx } from 'theme-ui'
 import PropTypes from 'prop-types'
-import { Div, H1, P, A } from  'styled-system-html'
-import Button from './Button'
+import Heading from './Heading'
+
 
 const HealthCheckBegin = (props) => {
 
   return (
-    <Div textAlign="center" py={4}>
-      <H1 color="base" pt={4} pb={3} fontSize={6}>Begin Team Health Check</H1>
-      <Div pt={3} pb={4} fontSize={3}>
-        <P pb={3}>Health checks help you find out how your team is doing, and work together to improve.</P>
-        <P pb={3}>This health check is based on <A target="block" color="cyan" href="https://labs.spotify.com/2014/09/16/squad-health-check-model/">Spotify’s Squad Health Check Model</A>.</P>
-      </Div>
-      <Button bg="green" onClick={props.onBegin}>Begin Health Check</Button>
-    </Div>
+    <>
+      <Heading>Begin Team Health Check</Heading>
+      <p sx={{py:3}}>Health checks help you find out how your team is doing, and work together to improve.</p>
+      <p sx={{pb:3}}>This health check is based on <a target="_blank" href="https://labs.spotify.com/2014/09/16/squad-health-check-model/">Spotify’s Squad Health Check Model</a>.</p>
+      <button sx={{bg:'green'}} onClick={props.onBegin}>Begin Health Check</button>
+    </>
   )
 }
 
@@ -1118,23 +1091,34 @@ HealthCheckBegin.propTypes = {
 export default HealthCheckBegin
 ~~~~
 
-Let’s import our new `HealthCheckBegin` into component  and render it in the `READY` state.
+Let’s update our Health Check page by importing our new `HealthCheckBegin` into component and render it in the `READY` state and wrapping the content in `PageContainer`.
 
 *pages/check.js*
 
 ~~~~
 ...
 return (
-  <>
+  <PageContainer>
     {{
       READY: <HealthCheckBegin onBegin={() => setCurrView(views.IN_PROGRESS)} />,
       IN_PROGRESS: <HealthCheck id={id} onComplete={() => { this.setState({view: this.views.COMPLETE}) }} />,
       COMPLETE: <HealthCheckComplete id={id} />
     } [currView] }
-  </>
+  </PageContainer>
 )
 ...
 ~~~~
+
+
+
+
+
+
+
+
+
+
+
 
 Now onto the health check itself. Let’s make a `HealthCheckTopic` component for collecting the responses.
 
