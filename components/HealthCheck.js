@@ -10,15 +10,13 @@ const HealthCheck = (props) => {
   const [ratings, setRatings] = useState([])
   const [isDone, setIsDone] = useState(false)
   const [loading, setLoading] = useState(false)
+  const colors = ['orange','purple','cyan','pink','green','primary']
   
   const currTopic = ratings.length
   
   const onConfirmRating = (rating) => {
     setRatings(ratings.concat([rating]))
   }
-
-  console.log('ratings',ratings)
-  console.log('topicTitles',topicTitles)
 
   return (
     <>
@@ -59,7 +57,7 @@ const HealthCheck = (props) => {
           </Mutation>
         ) : (
           <>
-            <HealthCheckTopic title={topicTitles[currTopic]} onConfirm={onConfirmRating}></HealthCheckTopic>
+            <HealthCheckTopic color={colors[ratings.length % colors.length]} title={topicTitles[currTopic]} onConfirm={onConfirmRating}></HealthCheckTopic>
           </>
         )
       }

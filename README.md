@@ -939,7 +939,7 @@ Now when we load `localhost:3000` we will see some styling already applied to th
 
 > The `sx` prop lets you style elements inline, using values from your theme. To use the `sx` prop, add the custom `/** @jsx jsx */` pragma comment to the top of your module and import the `jsx` function.
 
-Take a look at the [Theme UI Docs](https://theme-ui.com/getting-started) for more.
+Take a look at the [Theme UI Docs](https://theme-ui.com/getting-started) for more, and also get familiar with the [Styled System CSS docs](https://styled-system.com/css/#theme-keys).
 
 Let’s get started by making a `PageContainer` and `Heading` components that we can use on multiple views in the app.
 
@@ -1109,7 +1109,37 @@ return (
 ...
 ~~~~
 
-Now onto the health check itself. Let’s make a `HealthCheckTopic` component for collecting the responses.
+Now onto the health check itself. Let’s make a `HealthCheckTopic` component and a `TopicButton` component for collecting the responses.
+
+*components/TopicButton*
+
+~~~~
+/** @jsx jsx */
+import { jsx } from 'theme-ui'
+import PropTypes from 'prop-types'
+
+const TopicButton = (props) => (
+  <div sx={{fontSize: 3, my:2, pl:4, pr:3, py:3, border: props.checked ? 'solid 3px' : 'solid 1px', borderColor: props.color, borderRadius:0, position: 'relative'}}>
+    <span sx={{height:0, width: 0, position: 'absolute', top: props.checked ? '14px' : '12px', left: '24px', cursor: 'pointer'}}>
+      <input onChange={props.onChange} checked={props.checked}  type="radio" id={props.id} name={props.name} value={props.value} />
+    </span>
+    <label sx={{width:160, display: 'inline-block'}} htmlFor={props.id}>{props.label}</label>
+  </div>
+)
+
+TopicButton.propTypes = {
+  id: PropTypes.string.isRequired,
+  name: PropTypes.string.isRequired,
+  label: PropTypes.string.isRequired,
+  value: PropTypes.string.isRequired,
+  color: PropTypes.string.isRequired,
+  checked: PropTypes.bool.isRequired,
+  onChange: PropTypes.func,
+}
+
+export default TopicButton
+~~~~
+
 
 
 
