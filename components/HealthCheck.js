@@ -1,3 +1,5 @@
+/** @jsx jsx */
+import { jsx } from 'theme-ui'
 import PropTypes from 'prop-types'
 import { useState } from 'react'
 import { Mutation } from 'react-apollo'
@@ -40,10 +42,14 @@ const HealthCheck = (props) => {
                   <>
                     {
                       ratings.map((rating, i) => {
-                        return (<div key={topicTitles[i]}>{topicTitles[i]}: {ratingLabels[rating]}</div>)
+                        return (<div sx={{fontSize:3,p:2}} key={topicTitles[i]}>
+                          <span sx={{display:'inline-block',width:'240px',textAlign:'right'}}>{topicTitles[i]}</span> 
+                          <span sx={{pl:3,display:'inline-block',width:'240px',textAlign:'left',fontWeight:'bold'}}>{ratingLabels[rating]}</span>   
+                        </div>)
                       })
                     }
                     <button 
+                      sx={{mt:4}}
                       onClick={() => {
                         setLoading(true)
                         createMutation()

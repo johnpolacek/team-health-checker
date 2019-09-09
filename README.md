@@ -1142,6 +1142,7 @@ export default TopicButton
 
 
 
+WIP: Make a `RatingRow` component
 
 
 
@@ -1155,15 +1156,12 @@ export default TopicButton
 
 
 
-The health check topics themselves give us an opportunity to have a little more fun with the design. For the control input to give the rating, we can use React Rangeslider.
 
-~~~~
-npm i react-range-slider
-~~~~
 
-The React Rangeslider component comes with some css. Be sure add that to the global styles in `_pages/_document.js`, along with normalize and some base styles.
 
-For some graphics, we can use some svg icons to indicate the rating. [Font Awesome](https://fontawesome.com/) is a great resource for free vector icons and social logos.
+
+
+
 
 *src/components/HealthCheckIcon.js*
 
