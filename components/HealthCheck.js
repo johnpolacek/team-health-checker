@@ -4,8 +4,9 @@ import PropTypes from 'prop-types'
 import { useState } from 'react'
 import { Mutation } from 'react-apollo'
 import gql from 'graphql-tag'
-import { createHealthCheckResponseMutation, getHealthCheckQuery, topicTitles, ratingLabels } from '../api/operations'
+import { createHealthCheckResponseMutation, getHealthCheckQuery, topics, ratingLabels } from '../api/operations'
 import HealthCheckTopic from './HealthCheckTopic'
+import RatingRow from './RatingRow'
 
 const HealthCheck = (props) => {
 
@@ -23,7 +24,7 @@ const HealthCheck = (props) => {
   return (
     <>
       {
-        ratings.length === topicTitles.length ? (
+        ratings.length === topics.length ? (
           <Mutation
             mutation={createHealthCheckResponseMutation} 
             variables={{ ratings, healthCheckId: props.id }}
@@ -42,10 +43,7 @@ const HealthCheck = (props) => {
                   <>
                     {
                       ratings.map((rating, i) => {
-                        return (<div sx={{fontSize:3,p:2}} key={topicTitles[i]}>
-                          <span sx={{display:'inline-block',width:'240px',textAlign:'right'}}>{topicTitles[i]}</span> 
-                          <span sx={{pl:3,display:'inline-block',width:'240px',textAlign:'left',fontWeight:'bold'}}>{ratingLabels[rating]}</span>   
-                        </div>)
+                        return <RatingRow title={topics[i].title} rating={ratingLabels[rating]} />
                       })
                     }
                     <button 
@@ -63,7 +61,7 @@ const HealthCheck = (props) => {
           </Mutation>
         ) : (
           <>
-            <HealthCheckTopic color={colors[ratings.length % colors.length]} title={topicTitles[currTopic]} onConfirm={onConfirmRating}></HealthCheckTopic>
+            <HealthCheckTopic color={colors[ratings.length % colors.length]} topic={topics[currTopic]} onConfirm={onConfirmRating}></HealthCheckTopic>
           </>
         )
       }

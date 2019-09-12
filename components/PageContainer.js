@@ -9,6 +9,7 @@ export default (props) => (
     justifyContent: 'center',
     alignItems: 'center',
     textAlign: 'center',
+    pt: 4,
     px: 4,
     pb: 5,
   }}>{props.children}</div>

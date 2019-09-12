@@ -3,6 +3,7 @@ import App from '../components/App'
 import HealthCheckResults from '../components/HealthCheckResults'
 import { Query } from 'react-apollo'
 import { getHealthCheckQuery } from '../api/operations.js'
+import PageContainer from '../components/PageContainer'
 
 const Results = ({ id }) => (
   <App>
@@ -13,7 +14,9 @@ const Results = ({ id }) => (
           } else if (error || !data.HealthCheck) {
             return <div>Error: Could not load HealthCheck with id: {id}</div>
           } else {
-            return <HealthCheckResults id={id} />
+            return <PageContainer>
+              <HealthCheckResults id={id} />
+            </PageContainer>
           }
         }}
       </Query>

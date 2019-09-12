@@ -378,18 +378,26 @@ For the next part of developing this app, we will allow people to fill in the he
 
 We won’t worry about styling or a great user experience just yet, as this is just an exploratory proof-of-concept at this point.
 
-First, let’s define our topic titles for our health check api (our health check is based on [Spotify’s Squad Health Check](https://labs.spotify.com/2014/09/16/squad-health-check-model/) and the labels for the three possible ratings. 
+First, let’s define topic data for our health check api (our health check is based on [Spotify’s Squad Health Check](https://labs.spotify.com/2014/09/16/squad-health-check-model/) and the labels for the three possible ratings. 
 
 *api/operations.js*
 
 ~~~~
 ...
-export const topicTitles = ['Easy to release','Suitable Process','Tech Quality','Value','Speed','Mission','Fun','Learning','Support','Pawns']
-export const ratingLabels = {
-  0: 'Sucky',
-  1: 'OK',
-  2: 'Awesome'
-}
+export const topics = [
+  {
+    title:'Easy to release',
+    pos:'Releasing is simple, safe, painless and mostly automated.',
+    neg:'Releasing is risky, painful, lots of manual work and takes forever.'
+  },
+  {
+    title:'Suitable Process',
+    pos:'Our way of working fits us perfectly!',
+    neg:'Our way of working sucks!'
+  },
+  {
+    title:'Health of Codebase',
+    ...
 ...
 ~~~~
 
@@ -409,7 +417,7 @@ Let’s add a component that allows people to provide responses to each of the t
 ~~~~
 import PropTypes from 'prop-types'
 import { useState } from 'react'
-import { topicTitles, ratingLabels } from '../api/operations'
+import { topics, ratingLabels } from '../api/operations'
 
 const HealthCheck = (props) => {
 
@@ -424,7 +432,7 @@ const HealthCheck = (props) => {
 
   const onConfirmRating = () => {
     const newRatings = ratings.concat([currRating])
-    if (newRatings.length === topicTitles.length) {
+    if (newRatings.length === topics.length) {
       props.onComplete(newRatings)
     } else {
       setRatings(newRatings)
@@ -434,7 +442,7 @@ const HealthCheck = (props) => {
 
   return (
     <>
-      <h2>{topicTitles[currTopic]}</h2>
+      <h2>{topics[currTopic].title}</h2>
       <div onChange={onChange}>
         <div>
           <input checked={currRating === 2}  type="radio" id="awesome" name="rating" value="2" />
@@ -553,7 +561,7 @@ import PropTypes from 'prop-types'
 import { useState } from 'react'
 import { Mutation } from 'react-apollo'
 import gql from 'graphql-tag'
-import { createHealthCheckResponseMutation, getHealthCheckQuery, topicTitles } from '../api/operations'
+import { createHealthCheckResponseMutation, getHealthCheckQuery, topics } from '../api/operations'
 
 const HealthCheck = (props) => {
 
@@ -576,7 +584,7 @@ const HealthCheck = (props) => {
   return (
     <>
       {
-        ratings.length === topicTitles.length ? (
+        ratings.length === topics.length ? (
           <Mutation
             mutation={createHealthCheckResponseMutation} 
             variables={{ ratings, healthCheckId: props.id }}
@@ -595,7 +603,7 @@ const HealthCheck = (props) => {
                   <>
                     {
                       ratings.map((rating, i) => {
-                        return (<div key={topicTitles[i]}>{topicTitles[i]}: {ratingLabels[rating]}</div>)
+                        return (<div key={topics[i].title}>{topics[i].title}: {ratingLabels[rating]}</div>)
                       })
                     }
                     <button 
@@ -612,7 +620,7 @@ const HealthCheck = (props) => {
           </Mutation>
         ) : (
           <>
-            <h2>{topicTitles[currTopic]}</h2>
+            <h2>{topics[currTopic].title}</h2>
             <div onChange={onChange}>
               <div>
                 <input onChange={() => {}} checked={currRating === 2}  type="radio" id={ratingLabels[2]} name="rating" value="2" />
@@ -668,7 +676,7 @@ export default (props) => {
 
 Next, we need a way to review all the health check responses and see the results of all the completed health checks. We will make a HealthCheckResults component and again use a Query to pull the data from GraphQL.
 
-Rather than defining our queries and mutations within the various components, it makes sense to bring them all together in one file and import them in as needed. While we’re at it, let’s put our `topicTitles` array in there as well since we’ll want to share that across our app.
+Rather than defining our queries and mutations within the various components, it makes sense to bring them all together in one file and import them in as needed. While we’re at it, let’s put our `topics` data in there as well since we’ll want to share that across our app.
 
 To display the results, we can iterate through the responses and increment the values (Awesome/OK/Sucky) for each topic.
 
@@ -677,7 +685,7 @@ To display the results, we can iterate through the responses and increment the v
 ~~~~
 import PropTypes from 'prop-types'
 import { Query } from 'react-apollo'
-import { getHealthCheckQuery, topicTitles } from '../api/operations'
+import { getHealthCheckQuery, topics } from '../api/operations'
 
 const HealthCheckResults = (props) => {
 
@@ -687,7 +695,7 @@ const HealthCheckResults = (props) => {
         if (loading) return <div>Loading...</div>
         if (error || !data.HealthCheck) return <div>Error: Could not load HealthCheck with id: {this.props.id}</div>
 
-        let topicRatings = topicTitles.map(() => { return [0,0,0] })
+        let topicRatings = topics.map(() => { return [0,0,0] })
         const responses = data.HealthCheck.responses.forEach((response) => {
      			response.ratings.forEach((rating, topicIndex) => {
             topicRatings[topicIndex][rating]++
@@ -700,7 +708,7 @@ const HealthCheckResults = (props) => {
           	{
           		topicRatings.map((topic, topicIndex) => 
           			<div key={'topicRating'+topicIndex}>
-          				<h3>{topicTitles[topicIndex]}</h3>
+          				<h3>{topics[topicIndex].title}</h3>
           				<p>Awesome: {topic[2]}</p>
           				<p>OK: {topic[1]}</p>
           				<p>Sucky: {topic[0]}</p>
@@ -1140,146 +1148,104 @@ TopicButton.propTypes = {
 export default TopicButton
 ~~~~
 
-
-
-WIP: Make a `RatingRow` component
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-*src/components/HealthCheckIcon.js*
+*components/HealthCheckTopic.js*
 
 ~~~~
+/** @jsx jsx */
+import { jsx } from 'theme-ui'
 import PropTypes from 'prop-types'
-import { colors } from './Theme'
+import { useState } from 'react'
+import { ratingLabels } from '../api/operations'
+import TopicButton from './TopicButton'
 
-const HealthCheckIcon = (props) => {
+const HealthCheckTopic = (props) => {
 
+  const [currRating, setCurrRating] = useState(null)
+  
+  const onRatingChange = e => {
+    setCurrRating(parseInt(e.target.value))
+  }
+
+  const onRatingConfirm = e => {
+    props.onConfirm(currRating)
+    setCurrRating(null)
+  }
+  
   return (
     <>
-      {{
-        0: <svg fill={colors.red} alt="frowny face" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path d="M248 8C111 8 0 119 0 256s111 248 248 248 248-111 248-248S385 8 248 8zm0 448c-110.3 0-200-89.7-200-200S137.7 56 248 56s200 89.7 200 200-89.7 200-200 200zm-80-216c17.7 0 32-14.3 32-32s-14.3-32-32-32-32 14.3-32 32 14.3 32 32 32zm160-64c-17.7 0-32 14.3-32 32s14.3 32 32 32 32-14.3 32-32-14.3-32-32-32zm-80 128c-40.2 0-78 17.7-103.8 48.6-8.5 10.2-7.1 25.3 3.1 33.8 10.2 8.4 25.3 7.1 33.8-3.1 16.6-19.9 41-31.4 66.9-31.4s50.3 11.4 66.9 31.4c8.1 9.7 23.1 11.9 33.8 3.1 10.2-8.5 11.5-23.6 3.1-33.8C326 321.7 288.2 304 248 304z"/></svg>,
-        1: <svg fill={colors.gray} alt="meh face" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path d="M248 8C111 8 0 119 0 256s111 248 248 248 248-111 248-248S385 8 248 8zm0 448c-110.3 0-200-89.7-200-200S137.7 56 248 56s200 89.7 200 200-89.7 200-200 200zm-80-216c17.7 0 32-14.3 32-32s-14.3-32-32-32-32 14.3-32 32 14.3 32 32 32zm160-64c-17.7 0-32 14.3-32 32s14.3 32 32 32 32-14.3 32-32-14.3-32-32-32zm8 144H160c-13.2 0-24 10.8-24 24s10.8 24 24 24h176c13.2 0 24-10.8 24-24s-10.8-24-24-24z"/></svg>,
-        2: <svg fill={colors.green} alt="happy" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path d="M248 8C111 8 0 119 0 256s111 248 248 248 248-111 248-248S385 8 248 8zm0 448c-110.3 0-200-89.7-200-200S137.7 56 248 56s200 89.7 200 200-89.7 200-200 200zm-80-216c17.7 0 32-14.3 32-32s-14.3-32-32-32-32 14.3-32 32 14.3 32 32 32zm160 0c17.7 0 32-14.3 32-32s-14.3-32-32-32-32 14.3-32 32 14.3 32 32 32zm4 72.6c-20.8 25-51.5 39.4-84 39.4s-63.2-14.3-84-39.4c-8.5-10.2-23.7-11.5-33.8-3.1-10.2 8.5-11.5 23.6-3.1 33.8 30 36 74.1 56.6 120.9 56.6s90.9-20.6 120.9-56.6c8.5-10.2 7.1-25.3-3.1-33.8-10.1-8.4-25.3-7.1-33.8 3.1z"/></svg>
-      }[props.rating]}
+      <h2 sx={{color:props.color, fontSize:5, pb:2}}>{props.topic.title}</h2>
+      <TopicButton color={props.color} id={ratingLabels[2]} name="rating" label={ratingLabels[2]} value="2" onChange={onRatingChange} checked={currRating === 2}>{props.topic.pos}</TopicButton>
+      <TopicButton color={props.color} id={ratingLabels[1]} name="rating" label={ratingLabels[1]} value="1" onChange={onRatingChange} checked={currRating === 1} />
+      <TopicButton color={props.color} id={ratingLabels[0]} name="rating" label={ratingLabels[0]} value="0" onChange={onRatingChange} checked={currRating === 0}>{props.topic.pos}</TopicButton>
+      <button sx={{mt:4}} disabled={currRating == null} onClick={onRatingConfirm}>Next</button>
     </>
   )
 }
 
-HealthCheckIcon.propTypes = {
-  rating: PropTypes.oneOf([0,1,2]).isRequired
-}
-
-export default HealthCheckIcon
-~~~~
-
-Now we can use the range slider, icons and system html element components in our HealthCheckTopic component.
-
-*components/HealthCheckTopic.js*
-
-~~~~
-import PropTypes from 'prop-types'
-import { useState } from 'react'
-import Slider from 'react-rangeslider'
-import HealthCheckIcon from './HealthCheckIcon'
-import { Div, H2, Span, Input, Label } from 'styled-system-html'
-import Button from './Button'
-import { topicTitles, RatingLabels } from '../api/operations'
-
-const HealthCheckTopic = (props) => {
-
-  const [currRating, setCurrRating] = useState(1)
-  const colors = ['orange','purple','cyan','pink']
-  const color = colors[props.index % colors.length]
-  
-  return (
-    <Div px={4} py={3} border="4px solid" borderColor={color} borderRadius="8px" mx="auto" mt={4} style={{maxWidth:'640px'}}>
-      <Div borderBottom="1px solid" borderColor={color} color={color} py={3} mb={3} display="flex" flexWrap="wrap">
-        <H2 textAlign="left" fontSize={4} fontWeight="400" width={1/2} color={color}>{props.title}</H2>
-        <Div textAlign="right" fontSize={4} fontWeight="400" width={1/2} color={color}>{props.index+1} / {topicTitles.length}</Div>
-      </Div>
-      <Div pb={4}>
-        <Div width={props.width || 180} mx="auto" textAlign="center">
-          <HealthCheckIcon rating={currRating} />
-        </Div>
-        <Slider min={0} max={2} tooltip={false} labels={{0:'Horrible',1:'OK',2:'Awesome'}} value={currRating} onChange={value => setCurrRating(value)} />
-      </Div>
-      <Button bg={color} my={4} onClick={() => {
-          props.onConfirm(currRating)
-          setCurrRating(1)
-        }}
-        children="Next"
-      />
-    </Div>
-  )
-}
-
 HealthCheckTopic.propTypes = {
-  title: PropTypes.string.isRequired,
-  onConfirm: PropTypes.func.isRequired
+  topic: PropTypes.object.isRequired,
+  color: PropTypes.string.isRequired,
+  onConfirm: PropTypes.func.isRequired,
 }
 
 export default HealthCheckTopic
 ~~~~
 
-Next, we can update the HealthCheck component which contains both the topics and the confirmation step.
+Next, we can update the HealthCheck component which contains both the topics and the confirmation step, for which we will create a `RatingRow` component for listing the ratings made for each topic before confirming.
+
+*components/RatingRow*
+
+~~~~
+/** @jsx jsx */
+import { jsx } from 'theme-ui'
+import PropTypes from 'prop-types'
+
+const RatingRow = (props) => (
+  <div sx={{fontSize:3,p:2}} key={props.title}>
+    <span sx={{display:'inline-block',width:'240px',textAlign:'right'}}>{props.title}</span> 
+    <span sx={{pl:3,display:'inline-block',width:'240px',textAlign:'left',fontWeight:'bold'}}>{pros.rating}</span>   
+  </div>
+)
+
+RatingRow.propTypes = {
+  title: PropTypes.string.isRequired,
+  rating: PropTypes.string.isRequired,
+}
+
+export default RatingRow
+~~~~
+
 
 *components/HealthCheck.js*
 
 ~~~~
+/** @jsx jsx */
+import { jsx } from 'theme-ui'
 import PropTypes from 'prop-types'
 import { useState } from 'react'
 import { Mutation } from 'react-apollo'
 import gql from 'graphql-tag'
-import { createHealthCheckResponseMutation, getHealthCheckQuery, topicTitles, ratingLabels } from '../api/operations'
+import { createHealthCheckResponseMutation, getHealthCheckQuery, topics, ratingLabels } from '../api/operations'
 import HealthCheckTopic from './HealthCheckTopic'
-import HealthCheckIcon from './HealthCheckIcon'
-import Button from './Button.js'
-import { Div, H1, H2 } from 'styled-system-html'
+import RatingRow from './RatingRow'
 
 const HealthCheck = (props) => {
 
-  const [currRating, setCurrRating] = useState(null)
   const [ratings, setRatings] = useState([])
   const [isDone, setIsDone] = useState(false)
   const [loading, setLoading] = useState(false)
+  const colors = ['orange','purple','cyan','pink','green','primary']
   
   const currTopic = ratings.length
-  const ratingLabels = {
-    0: 'Sucky',
-    1: 'OK',
-    2: 'Awesome'
-  }
-
-  const onChange = e => {
-    setCurrRating(parseInt(e.target.value))
-  }
-
-  const onConfirmRating = () => {
-    setRatings(ratings.concat([currRating]))
-    setCurrRating(null)
+  
+  const onConfirmRating = (rating) => {
+    setRatings(ratings.concat([rating]))
   }
 
   return (
     <>
       {
-        ratings.length === topicTitles.length ? (
+        ratings.length === topics.length ? (
           <Mutation
             mutation={createHealthCheckResponseMutation} 
             variables={{ ratings, healthCheckId: props.id }}
@@ -1298,22 +1264,11 @@ const HealthCheck = (props) => {
                   <>
                     {
                       ratings.map((rating, i) => {
-                        const color = rating === 0 ? 'red' : rating === 1 ? 'gray5' : 'green'
-                        return (
-                          <Div display="inline-block" px={[1,2,2]} py={['2px',2,2]}>
-                            <Div width={[100,120,200,240]} py={[3,3,3,4]} px={[1,2,3]} fontSize={[1,3]} key={'topicRating'+i} bg={color} borderRadius="8px" color="white" style={{overflow:'hidden'}}>
-                              <Div width={[24,36]} mx="auto" pb={[0,0,2]}>
-                                <HealthCheckIcon fill="#fff" rating={rating} />
-                              </Div>
-                              <H2 height={[30,30,'auto']} fontSize={[0,1,2]}>{topicTitles[i]}</H2>
-                            </Div>
-                          </Div>
-                        )
+                        return <RatingRow title={topics[i].title} rating={ratingLabels[rating]} />
                       })
                     }
-                    <Button 
-                      bg={loading ? 'gray' : 'green'} color="white" fontSize={4} py={3} px={4} my={4} borderRadius="8px"
-                      disabled={loading}
+                    <button 
+                      sx={{mt:4}}
                       onClick={() => {
                         setLoading(true)
                         createMutation()
@@ -1326,7 +1281,9 @@ const HealthCheck = (props) => {
             }
           </Mutation>
         ) : (
-          <HealthCheckTopic title={topicTitles[currTopic]} onConfirm={onConfirmRating} index={ratings.length} />
+          <>
+            <HealthCheckTopic color={colors[ratings.length % colors.length]} topic={topics[currTopic]} onConfirm={onConfirmRating}></HealthCheckTopic>
+          </>
         )
       }
     </>
@@ -1340,6 +1297,40 @@ HealthCheck.propTypes = {
 
 export default HealthCheck
 ~~~~
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 Let’s update our HealthCheckComplete component as well.
 
@@ -1370,7 +1361,7 @@ The last component to update is `HealthCheckResults`.
 ~~~~
 import PropTypes from 'prop-types'
 import { Query } from 'react-apollo'
-import { getHealthCheckQuery, topicTitles } from '../api/operations'
+import { getHealthCheckQuery, topics } from '../api/operations'
 import { Div, H1, H2, P, Span } from 'styled-system-html'
 import HealthCheckIcon from '../components/HealthCheckIcon'
 
@@ -1380,7 +1371,7 @@ const HealthCheckResults = (props) => (
       if (loading) return <div>Loading...</div>
       if (error || !data.HealthCheck) return <div>Error: Could not load HealthCheck with id: {this.props.id}</div>
 
-      let topicRatings = topicTitles.map(() => { return [0,0,0] })
+      let topicRatings = topics.map(() => { return [0,0,0] })
       const responses = data.HealthCheck.responses.forEach((response) => {
    			response.ratings.forEach((rating, topicIndex) => {
    				topicRatings[topicIndex][rating]++
@@ -1400,7 +1391,7 @@ const HealthCheckResults = (props) => (
                   <Div width={48} mx="auto">
                     <HealthCheckIcon fill="#fff" rating={rating} />
                   </Div>
-                  <H2 width={240} mx="auto" borderBottom="solid 1px" pb={3} px={4} mb={3} borderColor="#fff" fontSize={1} fontWeight="bold">{topicTitles[topicIndex]}</H2>
+                  <H2 width={240} mx="auto" borderBottom="solid 1px" pb={3} px={4} mb={3} borderColor="#fff" fontSize={1} fontWeight="bold">{topics[topicIndex].title}</H2>
                   <Div fontSize={2}>
                     <P>Awesome: {topic[2]}</P>
                     <P>OK: {topic[1]}</P>

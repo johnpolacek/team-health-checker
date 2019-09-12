@@ -29,5 +29,5 @@ export default {
   },
   space: [0,4,8,16,32,64,128],
   breakpoints: ['32em','48em','64em','80em'],
-  radii: [6],
+  radii: [0, 3, 6],
 }
