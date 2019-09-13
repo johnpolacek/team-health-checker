@@ -1,25 +1,29 @@
-# Building a Team Health Check Web App with React, Apollo, Next.js and Cypress
+# Building and Deploying a SSR Web App
+###### with React, Apollo, Next.js, Now, Theme UI and Cypress
 
+----
+<br/>
 
 ## Part 1
 
 ### What are we building?
 
 #### Team Health Check
-- Facillitate round table discussion that can improve your team.
-- Example listen to Rabbit Hole podcast
-- Analog is great for in-office, what about remote?
-- Our health check is modeled from the [Spotify Squad Health Check](https://labs.spotify.com/2014/09/16/squad-health-check-model/)
+The purpose of a Team Health Check is is to facillitate round table discussion that can improve different aspects of your team. We are going to model ours after the [Spotify Squad Health Check](https://labs.spotify.com/2014/09/16/squad-health-check-model/). For an example of this in practice, check out this [episode of the Rabbit Hole Podcast](https://www.stridenyc.com/podcasts/96-health-check
+
+Most examples of health checks are analog, done with cards and everyone gathered together in the same room. This is great for in-office, but what about for our increasingly remote teams? 
+
+Our goal is to create an online version of this, that can be done in during a team video chat.
 
 ### SSR Web Apps 
 
 The ability to build isomorphic (~aka universal) web apps is that the same React and JS code can run on the client and the server. 
 
-The benefit here is that you can get a fast page load on that first visit, where, just like on a traditional server-side web architecutre, server sends just what is needed to the client, the initial minified render of the page, inlining critical styles and the app bundle. From there the client takes over, providing the faster rendering experience you can get from a single-page app.
+The benefit here is that you can get a fast page load on that first visit, where, just like on a traditional server-side web architecture, the server sends just what is needed to the client, the initial minified render of the page, inlining critical styles and the app bundle. From there the client takes over, providing the faster rendering experience you can get from a single-page app when navigating between views.
 
 #### Next.js
 
-With Next.js, for each route in the app, we load the necessary data for its inital component tree and render the page server-side to send to the browser, and then our client-side React app will get its initial state and handle the rest from there.
+With [Next.js](https://nextjs.org/), for each route in the app, we load the necessary data for its inital component tree and render the page server-side to send to the browser, and then our client-side React app will get its initial state and handle the rest from there.
 
 ### Apollo and GraphQL
 
@@ -200,11 +204,6 @@ Then, we will update `package.json` with a new build command for now.
 
 Let’s see what we have so far.
 
-
-
-NEED THIS:
-https://github.com/zeit/now-cli/pull/1883
-
 ~~~~
 now dev
 ~~~~
@@ -290,7 +289,7 @@ export const createHealthCheckMutation = gql`
 ~~~~
 import { useState } from 'react';
 import { Mutation } from 'react-apollo'
-import createHealthCheckMutation from '../api/operations'
+import { createHealthCheckMutation } from '../api/operations'
 import Link from 'next/link'
 
 const HealthCheckCreator = (props) => {
@@ -308,7 +307,7 @@ const HealthCheckCreator = (props) => {
               <input readonly type="text" value={window.location.href+'/check/'+id} /> 
             </div>
             <p>
-              <Link prefetch href={'/check/?id='+id}>
+              <Link prefetch href={'/check/'+id}>
                 <a>View health check</a>
               </Link>
             </p>
@@ -380,14 +379,27 @@ For the next part of developing this app, we will allow people to fill in the he
 
 We won’t worry about styling or a great user experience just yet, as this is just an exploratory proof-of-concept at this point.
 
-First, let’s define our topic titles for our health check api (our health check is based on [Spotify’s Squad Health Check](https://labs.spotify.com/2014/09/16/squad-health-check-model/).
+First, let’s define topic data for our health check api (our health check is based on [Spotify’s Squad Health Check](https://labs.spotify.com/2014/09/16/squad-health-check-model/) and the labels for the three possible ratings. 
 
 *api/operations.js*
 
 ~~~~
 ...
-export const topicTitles = ['Easy to release','Suitable Process','Tech Quality','Value','Speed','Mission','Fun','Learning','Support','Pawns']
-....
+export const topics = [
+  {
+    title:'Easy to release',
+    pos:'Releasing is simple, safe, painless and mostly automated.',
+    neg:'Releasing is risky, painful, lots of manual work and takes forever.'
+  },
+  {
+    title:'Suitable Process',
+    pos:'Our way of working fits us perfectly!',
+    neg:'Our way of working sucks!'
+  },
+  {
+    title:'Health of Codebase',
+    ...
+...
 ~~~~
 
 Let’s add a component that allows people to provide responses to each of the topics.
@@ -406,7 +418,7 @@ Let’s add a component that allows people to provide responses to each of the t
 ~~~~
 import PropTypes from 'prop-types'
 import { useState } from 'react'
-import { topicTitles } from '../api/operations'
+import { topics, ratingLabels } from '../api/operations'
 
 const HealthCheck = (props) => {
 
@@ -421,7 +433,7 @@ const HealthCheck = (props) => {
 
   const onConfirmRating = () => {
     const newRatings = ratings.concat([currRating])
-    if (newRatings.length === topicTitles.length) {
+    if (newRatings.length === topics.length) {
       props.onComplete(newRatings)
     } else {
       setRatings(newRatings)
@@ -431,7 +443,7 @@ const HealthCheck = (props) => {
 
   return (
     <>
-      <h2>{topicTitles[currTopic]}</h2>
+      <h2>{topics[currTopic].title}</h2>
       <div onChange={onChange}>
         <div>
           <input checked={currRating === 2}  type="radio" id="awesome" name="rating" value="2" />
@@ -550,7 +562,7 @@ import PropTypes from 'prop-types'
 import { useState } from 'react'
 import { Mutation } from 'react-apollo'
 import gql from 'graphql-tag'
-import { createHealthCheckResponseMutation, getHealthCheckQuery, topicTitles } from '../api/operations'
+import { createHealthCheckResponseMutation, getHealthCheckQuery, topics } from '../api/operations'
 
 const HealthCheck = (props) => {
 
@@ -560,11 +572,6 @@ const HealthCheck = (props) => {
   const [loading, setLoading] = useState(false)
   
   const currTopic = ratings.length
-  const ratingLabels = {
-    0: 'Sucky',
-    1: 'OK',
-    2: 'Awesome'
-  }
 
   const onChange = e => {
     setCurrRating(parseInt(e.target.value))
@@ -578,7 +585,7 @@ const HealthCheck = (props) => {
   return (
     <>
       {
-        ratings.length === topicTitles.length ? (
+        ratings.length === topics.length ? (
           <Mutation
             mutation={createHealthCheckResponseMutation} 
             variables={{ ratings, healthCheckId: props.id }}
@@ -597,7 +604,7 @@ const HealthCheck = (props) => {
                   <>
                     {
                       ratings.map((rating, i) => {
-                        return (<div key={topicTitles[i]}>{topicTitles[i]}: {ratingLabels[rating]}</div>)
+                        return (<div key={topics[i].title}>{topics[i].title}: {ratingLabels[rating]}</div>)
                       })
                     }
                     <button 
@@ -614,7 +621,7 @@ const HealthCheck = (props) => {
           </Mutation>
         ) : (
           <>
-            <h2>{topicTitles[currTopic]}</h2>
+            <h2>{topics[currTopic].title}</h2>
             <div onChange={onChange}>
               <div>
                 <input onChange={() => {}} checked={currRating === 2}  type="radio" id={ratingLabels[2]} name="rating" value="2" />
@@ -670,7 +677,7 @@ export default (props) => {
 
 Next, we need a way to review all the health check responses and see the results of all the completed health checks. We will make a HealthCheckResults component and again use a Query to pull the data from GraphQL.
 
-Rather than defining our queries and mutations within the various components, it makes sense to bring them all together in one file and import them in as needed. While we’re at it, let’s put our `topicTitles` array in there as well since we’ll want to share that across our app.
+Rather than defining our queries and mutations within the various components, it makes sense to bring them all together in one file and import them in as needed. While we’re at it, let’s put our `topics` data in there as well since we’ll want to share that across our app.
 
 To display the results, we can iterate through the responses and increment the values (Awesome/OK/Sucky) for each topic.
 
@@ -679,7 +686,7 @@ To display the results, we can iterate through the responses and increment the v
 ~~~~
 import PropTypes from 'prop-types'
 import { Query } from 'react-apollo'
-import { getHealthCheckQuery, topicTitles } from '../api/operations'
+import { getHealthCheckQuery, topics } from '../api/operations'
 
 const HealthCheckResults = (props) => {
 
@@ -689,7 +696,7 @@ const HealthCheckResults = (props) => {
         if (loading) return <div>Loading...</div>
         if (error || !data.HealthCheck) return <div>Error: Could not load HealthCheck with id: {this.props.id}</div>
 
-        let topicRatings = topicTitles.map(() => { return [0,0,0] })
+        let topicRatings = topics.map(() => { return [0,0,0] })
         const responses = data.HealthCheck.responses.forEach((response) => {
      			response.ratings.forEach((rating, topicIndex) => {
             topicRatings[topicIndex][rating]++
@@ -702,7 +709,7 @@ const HealthCheckResults = (props) => {
           	{
           		topicRatings.map((topic, topicIndex) => 
           			<div key={'topicRating'+topicIndex}>
-          				<h3>{topicTitles[topicIndex]}</h3>
+          				<h3>{topics[topicIndex].title}</h3>
           				<p>Awesome: {topic[2]}</p>
           				<p>OK: {topic[1]}</p>
           				<p>Sucky: {topic[0]}</p>
@@ -795,83 +802,93 @@ A key aspect of our GraphQL api is that the getHealthCheckQuery is cached, so wh
 ##Part 5
 
 
-We have a basic working proof-of-concept for the Health Check web app. Now it is time to improve the design and make it more user-friendly.
+Now that we have a basic working proof-of-concept, it is time to improve the design.
 
-You don’t need to use CSS-in-JS to build React Apps, but styles are often closely tied to state at the component layer, so for that and other reasons, it is quite popular. Let’s do it!
+You don’t need to use CSS-in-JS to build React Apps, but styles are often closely tied to state at the component layer. For that and [other reasons](https://jxnblk.com/blog/why-you-should-learn-css-in-js/), it is quite popular. Let’s do it!
 
-First off, let’s set up some theming configuration for colors, typography and spacing. To do this, we will use a [ThemeProvider component](https://www.styled-components.com/docs/advanced#theming) from [styled components](https://www.styled-components.com/)
+First off, let’s set up some theming configuration for colors, typography and spacing. To do this, we will use [Theme UI](https://theme-ui.com/), a library for building designs with a constraint-based design system (a theme!). 
+
+For more information on Theme UI, check out the [documentation](https://theme-ui.com/getting-started) which has more detail about the steps below.
 
 ~~~~
-$ npm i styled-components
+$ npm i theme-ui @emotion/core @mdx-js/react
 ~~~~
 
-ThemeProvider doesn’t do much without a theme, so let’s think about our design system. What typography do we need? What colors should we use?
-
-If we were a brand, we might want a webfont that would help differentiate us from others on the web. Since that is not the case, it seems like a good decision for performance reasons to use a [web safe CSS font stack](https://www.cssfontstack.com/). We can also define a type scale and weights to use in our app.
-
-When it comes to colors, this is an exercise for teams to take together so we should try to make it fun, so choosing some brighter colors is appropriate. Remember to choose a color palette that is accessibility - see [these 90 examples of A11Y compliant color combos](http://clrs.cc/a11y/)
-
-We can define all the named colors available to the theme (pink, blue, red, green, etc). We can create color ranges for each of the named colors from light to dark, and from those, we may wish to further abstract color references to those named colors (primary, secondary, warning, error, success, etc).
-
-Let’s define these aspects of our design theme in code so we can use them throughout our project.
+First, we will define the color, typographic and layout scale properties in a `Theme.js` file.
 
 *components/Theme.js*
 
 ~~~~
-export const font = `'avenir next', avenir, helvetica, arial, sans-serif`;
-export const monospace = `"SF Mono", "Roboto Mono", Menlo, monospace`
-export const fontSizes = [12,14,16,20,24,32,48,64,72,96]
-export const weights = [200,400,700]
-
-export const colors = {
-  "base": "#4169e1",
-  "black": "#000",
-  "blue": "#4169e1",
-  ....
-}
-
-export const breakpoints = ['32em','48em','64em','80em']
-export const space = [0,4,8,16,32,64,128]
-export const radius = 4
-
 export default {
-  font,
-  monospace,
-  fontFamilies,
-  weights,
-  fontSizes,
-  colors,
-  breakpoints,
-  space,
-  radius
+  fonts: {
+    body: `'avenir next', avenir, helvetica, arial, sans-serif`,
+  },
+  fontSizes: [12,14,16,20,24,32,48,64,72,96],
+  fontWeights: {
+    lite: 200,
+    body: 400,
+    heading: 700,
+  },
+  lineHeights: {
+    body: 1.5,
+    heading: 1.125,
+  },
+  colors: {
+    base: "#4169e1",
+    black: "#000",
+    blue: "#4169e1",
+    cyan: "#41b9e1",
+    gray: "#aeb3c0",
+    green: "#41e169",
+    purple: "#6941e1",
+    orange: "#fba100",
+    pink: "#e141b9",
+    red: "#ee5555",
+    white: "#fff",
+    yellow: "#FFDD22",
+  },
+  space: [0,4,8,16,32,64,128],
+  breakpoints: ['32em','48em','64em','80em'],
+  radii: [4]
 }
 ~~~~
 
-[Next.js](https://nextjs.org) has a [bare-bones example](https://github.com/zeit/next.js/tree/master/examples/with-styled-components) of using [styled-components](https://www.styled-components.com/) with server-side rendering so that we can ship a minimal amount of CSS on page load. 
+To get Theme UI to work with Next.js, there is some additional configuration we need to do. We will take what we have now and applying updates from the [Next.js Theme UI Example](https://github.com/system-ui/theme-ui/tree/master/examples/next).
 
-To style our components with our theme, we will use a [ThemeProvider](https://www.styled-components.com/docs/advanced) component from styled components. This works very similarly to our ApolloProvider wrapper component that provides access to the Apollo client to all its component children.
-
-The killer feature here is that no matter which page someone lands on, they will automatically get the critical css for that page inlined into the document head.
+To give our pages and components access to this theme file, we will use Theme UI’s `ThemeProvider` in our `App` component.
 
 *pages/_app.js*
 
 ~~~~
 import App, {Container} from 'next/app'
 import React from 'react'
-import { ThemeProvider } from 'styled-components'
-import theme from '../components/Theme'
+import { ThemeProvider, Styled } from 'theme-ui'
 import withApolloClient from '../lib/with-apollo-client'
 import { ApolloProvider } from 'react-apollo'
+import theme from '../components/Theme'
+
 
 class MyApp extends App {
+	static async getInitialProps({ Component, ctx }) {
+    let pageProps = {}
+
+    if (Component.getInitialProps) {
+      pageProps = await Component.getInitialProps(ctx)
+    }
+
+    return { pageProps }
+  }
+
   render () {
     const {Component, pageProps, apolloClient} = this.props
     return <Container>
     	<ThemeProvider theme={theme}>
-	      <ApolloProvider client={apolloClient}>
-	        <Component {...pageProps} />
-	      </ApolloProvider>
-	    </ThemeProvider>
+			<ApolloProvider client={apolloClient}>
+				<Styled.root>
+	            <Component {...pageProps} />
+	          </Styled.root>
+			</ApolloProvider>
+		</ThemeProvider>
     </Container>
   }
 }
@@ -879,122 +896,139 @@ class MyApp extends App {
 export default withApolloClient(MyApp)
 ~~~~
 
-We can also apply [normalize.css](https://necolas.github.io/normalize.css/) and any other css we want to apply to every page across our web app. Next.js has a [custom Document component](https://nextjs.org/docs/#custom-document) that makes this possible.
+To avoid a flash or unstyled content, we use the [Document component](https://nextjs.org/docs/#custom-document) component from Next.js. We can also use Emotion’s `Global` combined with our `Theme` props to apply base styling across all the pages of our app.
 
 *pages/_document.js*
 
 ~~~~
-import Document, { Head, Main, NextScript } from 'next/document'
-import { ServerStyleSheet } from 'styled-components'
-import theme from '../components/Theme.js'
+import React from 'react'
+import Document, { Html, Head, Main, NextScript } from 'next/document'
+import { Global, css } from '@emotion/core'
+import theme from '../components/Theme'
 
-export default class MyDocument extends Document {
-  static getInitialProps ({ renderPage }) {
-    const sheet = new ServerStyleSheet()
-    const page = renderPage(App => props => sheet.collectStyles(<App {...props} />))
-    const styleTags = sheet.getStyleElement()
-    return { ...page, styleTags }
+class MyDocument extends Document {
+  static async getInitialProps(ctx) {
+    const initialProps = await Document.getInitialProps(ctx)
+    return initialProps
   }
 
-  render () {
+  render() {
     return (
-      <html lang="en">
-        <Head>
-          <meta charSet="utf-8" />
-          <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-          <meta name="theme-color" content="#000000" />
-          <style>{`
-            button,hr,input{overflow:visible}progress,sub,sup{vertical-align:baseline}[type=checkbox],[type=radio],legend{box-sizing:border-box;padding:0}html{line-height:1.2;-webkit-text-size-adjust:100%}body{margin:0}h1{font-size:2em;margin:.67em 0}hr{box-sizing:content-box;height:0}code,kbd,pre,samp{font-family:monospace,monospace;font-size:1em}a{background-color:transparent}abbr[title]{border-bottom:none;text-decoration:underline;text-decoration:underline dotted}b,strong{font-weight:bolder}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative}sub{bottom:-.25em}sup{top:-.5em}img{border-style:none}button,input,optgroup,select,textarea{font-family:inherit;font-size:100%;line-height:1.15;margin:0}button,select{text-transform:none}[type=button],[type=reset],[type=submit],button{-webkit-appearance:button}[type=button]::-moz-focus-inner,[type=reset]::-moz-focus-inner,[type=submit]::-moz-focus-inner,button::-moz-focus-inner{border-style:none;padding:0}[type=button]:-moz-focusring,[type=reset]:-moz-focusring,[type=submit]:-moz-focusring,button:-moz-focusring{outline:ButtonText dotted 1px}fieldset{padding:.35em .75em .625em}legend{color:inherit;display:table;max-width:100%;white-space:normal}textarea{overflow:auto}[type=number]::-webkit-inner-spin-button,[type=number]::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}[type=search]::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}details{display:block}summary{display:list-item}[hidden],template{display:none}
-            html{box-sizing:border-box;} *,*:before,*:after{box-sizing:inherit;} 
-            body{margin:0;font-family:`+theme.font+`;} 
-            button,input[type=submit]{cursor:pointer;}
-            p{line-height:1.5;margin:0;}
-            ul{margin-top:0;}
-            select{padding:8px;}
-            h1,h2,h3,h4,h5,h6,.h1,.h2,.h3,.h4,.h5,.h6{text-rendering:optimizelegibility;margin:0;font-weight:400;}
-            input,select,textarea,button{padding:4px;border:solid 2px #aed7ff;font-size:16px;font-family:`+theme.font+`,sans-serif;}
-            select{-webkit-appearance:menulist;height:32px;}
-            table{border-collapse:collapse;}
-            input{text-align:inherit;padding-left:4px;}
-            button, button:focus { outline: none; border: none; }
-            :focus:not(:focus-visible) { outline: none; }
-          `}</style>
-          {this.props.styleTags}
-        </Head>
+      <Html lang="en">
         <body>
+          <Global
+            styles={css`
+              button,hr,input{overflow:visible}progress,sub,sup{vertical-align:baseline}[type=checkbox],[type=radio],legend{box-sizing:border-box;padding:0}html{line-height:1.2;-webkit-text-size-adjust:100%}body{margin:0}hr{box-sizing:content-box;height:0}code,kbd,pre,samp{font-family:monospace,monospace;font-size:1em}a{background-color:transparent}abbr[title]{border-bottom:none;text-decoration:underline;text-decoration:underline dotted}b,strong{font-weight:bolder}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative}sub{bottom:-.25em}sup{top:-.5em}img{border-style:none}button,input,optgroup,select,textarea{font-family:inherit;font-size:100%;line-height:1.15;margin:0}button,select{text-transform:none}[type=button],[type=reset],[type=submit],button{-webkit-appearance:button}[type=button]::-moz-focus-inner,[type=reset]::-moz-focus-inner,[type=submit]::-moz-focus-inner,button::-moz-focus-inner{border-style:none;padding:0}[type=button]:-moz-focusring,[type=reset]:-moz-focusring,[type=submit]:-moz-focusring,button:-moz-focusring{outline:ButtonText dotted 1px}fieldset{padding:.35em .75em .625em}legend{color:inherit;display:table;max-width:100%;white-space:normal}textarea{overflow:auto}[type=number]::-webkit-inner-spin-button,[type=number]::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}[type=search]::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}details{display:block}summary{display:list-item}[hidden],template{display:none}
+              html{box-sizing:border-box;} *,*:before,*:after{box-sizing:inherit;} 
+              body{margin:0;font-family:${theme.fonts.body};font-size:${theme.fontSizes[1]}px;} 
+              button,input[type=submit]{cursor:pointer;background:${theme.colors.primary};color:white;padding:${theme.space[3]}px ${theme.space[4]}px;border-radius:${theme.radii[0]}px;border:none;font-size:${theme.fontSizes[]}px;}
+              p{line-height:${theme.lineHeights.body};}
+              ul{margin-top:0;}
+              select{padding:8px;}
+              h1,h2,h3,h4,h5,h6{text-rendering:optimizelegibility;line-height:${theme.lineHeights.heading};}
+              input,select,textarea{padding:4px;border:solid 2px #aed7ff;font-size:16px;font-family:${theme.fonts.body};}
+              select{-webkit-appearance:menulist;height:32px;}
+              table{border-collapse:collapse;}
+              input{text-align:inherit;padding-left:4px;}
+              a{color:${theme.colors.primary}; }
+            `}
+          />
           <Main />
           <NextScript />
         </body>
-      </html>
-    )
+      </Html>
+    );
   }
 }
+
+export default MyDocument;
 ~~~~
 
-We can now remove the styling from `App.js`.
+Now when we load `localhost:3000` we will see some styling already applied to this page. To add more styling to our components, we will be using Theme UI and the `sx` prop. 
 
-*components/App.js*
+> The `sx` prop lets you style elements inline, using values from your theme. To use the `sx` prop, add the custom `/** @jsx jsx */` pragma comment to the top of your module and import the `jsx` function.
+
+Take a look at the [Theme UI Docs](https://theme-ui.com/getting-started) for more, and also get familiar with the [Styled System CSS docs](https://styled-system.com/css/#theme-keys).
+
+Let’s get started by making a `PageContainer` and `Heading` components that we can use on multiple views in the app.
+
+First, let’s talk about how to do responsive styling in Theme UI. Under the hood, Theme UI uses [Styled System](https://styled-system.com/), which is a system for passing style props to components. 
+
+Styled System makes it really easy to apply responsive styles to our components. We can change our styling properties to use an array syntax to apply different values across the breakpoints defined in our theme. Read more about it in Styled System’s [Responsive Styles Documentation](https://styled-system.com/responsive-styles).
+
+For example, in `PageContainer`, we can reduce the side padding on our smallest breakpoint to 3 levels instead of 4 (we defined spacing levels and breakpoints in `Theme.js`).
+
+*components/PageContainer.js*
 
 ~~~~
-export default ({ children }) => (
-  <main>
-    {children}
-  </main>
+/** @jsx jsx */
+import { jsx } from 'theme-ui'
+
+export default (props) => (
+  <div sx={{
+    height: '100vh',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    textAlign: 'center',
+    px: [3,4],
+    pb: 5,
+  }}>{props.children}</div>
 )
 ~~~~
 
-[Styled System](https://jxnblk.com/styled-system/) is a library that provides responsive, theme-based style props for our React UI components. By default, it works with [styled components](https://styled-components.com), and we will be using a library called [Styled System HTML](https://johnpolacek.github.io/styled-system-html/) which gives us a set of low level html element components ready for stateful theming.
+*components/Heading.js*
 
 ~~~~
-$ npm i styled-system-html
+/** @jsx jsx */
+import { jsx } from 'theme-ui'
+
+export default (props) => (
+  <h1 sx={{
+    fontSize:6,
+    pb:3,
+    color:'primary',
+    fontWeight: 400,
+  }}>{props.children}</h1>
+)
 ~~~~
 
-Now that we have our theme settings and some low level UI components, let’s make our landing page a little more appealing.
-
-We can switch the html elements to our components which can accept style props and data from our design theme. Eventually, we can abstract these further into UI components with default styling props so we don't need to repeatedly declare padding, font size, etc.
+Let’s change the `h1` on our landing page to our new `Heading` component and wrap the content in `PageContainer`.
 
 *pages/index.js*
 
 ~~~~
+import Head from 'next/head'
 import App from '../components/App'
 import HealthCheckCreator from '../components/HealthCheckCreator'
-import { Div, H1, P } from 'styled-system-html'
+import PageContainer from '../components/PageContainer'
+import Heading from '../components/Heading'
 
 export default () => (
   <App>
-  	<Div textAlign="center" py={54}>
-	    <H1 color="base" pt={4} pb={3} fontSize={8} fontWeight="400">Team Health Checker</H1>
-	    <P pb={5} fontSize={3}>Health checks help you find out how your team is doing, and work together to improve.</P>
-	    <HealthCheckCreator />
-	</Div>
+    <Head>
+      <title>Team Health Checker</title>
+    </Head>
+    <PageContainer>
+      <Heading>Team Health Checker</Heading>
+      <HealthCheckCreator />
+    </PageContainer>
   </App>
 )
 ~~~~
 
-Next up, we will update
-
-*components/HealthCheckIntro.js*
-
-~~~~
-import { Div, P, A } from 'styled-system-html'
-
-export default () => (
-	<Div px={3} pt={3} pb={4} fontSize={[2,2,3]}>
-    <P pb={3}>Health checks help you find out how your team is doing, and work together to improve.</P>
-    <P pb={3}>This health check is based on <A color="cyan" href="https://labs.spotify.com/2014/09/16/squad-health-check-model/" style={{whiteSpace:'nowrap'}}>Spotify’s Squad Health Check Model</A>.</P>
-  </Div>
-)
-~~~~
+Next up, we will update `HealthCheckCreator`.
 
 *components/HealthCheckCreator.js*
 
 ~~~~
+/** @jsx jsx */
+import { jsx } from 'theme-ui'
 import { useState } from 'react';
 import { Mutation } from 'react-apollo'
-import Link from 'next/link'
 import { createHealthCheckMutation } from '../api/operations'
-import { Div, H2, P, A, Input } from 'styled-system-html'
-import Button from './Button'
+import Link from 'next/link'
 
 export default (props) => {
   const [id, setId] = useState(null);
@@ -1005,36 +1039,36 @@ export default (props) => {
       {
         id ? (
           <>
-            <H2 color="green" pb={4} fontSize={[4,5]} fontWeight="600">You created a new Health Check!</H2>
-            <P py={3}>
+            <h2>You created a new Health Check!</h2>
+            <p sx={{p:4, fontSize:3}}>
               <Link prefetch href={'/check/'+id}>
-                <A href={'/check/'+id} color="base" fontSize={[3,4]}>Go To Health Check</A>
+                <a>View health check</a>
               </Link>
-            </P>
-            <Div py={4} mb={4}>
-              <P pb={3} fontSize={[2,3]}>You can share it with your friends via&nbsp;this&nbsp;link:</P>
-              <Input width={340} fontSize={[0,1,2]} p={2} readonly type="text" value={window.location.href+'check/'+id} /> 
-            </Div>
+            </p>
+            <div sx={{width:'100%', maxWidth:'480px', p:3}}>
+              <p>You can share it with your friends by sharing this link:</p>
+              <input sx={{width:'100%', p:3}} readonly type="text" value={window.location.href+'/check/'+id} /> 
+            </div>
           </>
         ) : (
-          <Mutation 
-            mutation={createHealthCheckMutation} 
-            onCompleted={(data) => {setId(data.createHealthCheck.id)}}
-          >
-            {
-              createMutation => <Button 
-                disabled={loading}
-                bg={loading ? 'gray' : 'green'} color="white" 
-                onClick={() => {
-                  if (!loading) {
+          <>
+            <p>Health checks help you find out how your team is doing, and work together&nbsp;to&nbsp;improve.</p>
+            <p sx={{pb:4}}>This health check is based on <a sx={{whiteSpace:'nowrap'}} href="https://labs.spotify.com/2014/09/16/squad-health-check-model/">Spotify’s Squad Health Check Model</a>.</p>
+            <Mutation 
+              mutation={createHealthCheckMutation} 
+              onCompleted={(data) => {setId(data.createHealthCheck.id)}}
+            >
+              {
+                createMutation => <button 
+                  onClick={() => {
                     setLoading(true)
                     createMutation()
-                  }
-                }}
-                children = {loading ? 'Loading...' : 'Create New Health Check'}
-              />
-            }
-          </Mutation>
+                  }}
+                  children = {loading ? 'Loading...' : 'Create New Health Check'}
+                />
+              }
+            </Mutation>
+          </>
         )
       }
     </>
@@ -1042,49 +1076,27 @@ export default (props) => {
 }
 ~~~~
 
-In every project, there comes a time when you need to create a Button component. Now is that time.
+Let’s create a new `HealthCheckBegin` component for the beginning of the health check to make it more friendly to anyone that lands on the link shared with them.
 
-*src/components/Button.js*
-
-~~~~
-import React from 'react'
-import {Button as Btn} from 'styled-system-html'
-
-export default (props) => (
-	<Btn
-	    fontSize={[2,3,4]}
-	    m={0}
-	    py={3}
-	    px={4}
-	    color='white'
-	    bg='blue'
-	    border={0}
-	    borderRadius="8px"
-		{...props}
-	/>
-)
-~~~~
-
-Next up, let’s create a new component for the beginning of the health check to make it more friendly to anyone that lands on the link shared with them.
 
 *components/HealthCheckBegin.js*
 
 ~~~~
+/** @jsx jsx */
+import { jsx } from 'theme-ui'
 import PropTypes from 'prop-types'
-import { Div, H1, P, A } from  'styled-system-html'
-import Button from './Button'
+import Heading from './Heading'
+
 
 const HealthCheckBegin = (props) => {
 
   return (
-    <Div textAlign="center" py={4}>
-      <H1 color="base" pt={4} pb={3} fontSize={6}>Begin Team Health Check</H1>
-      <Div pt={3} pb={4} fontSize={3}>
-        <P pb={3}>Health checks help you find out how your team is doing, and work together to improve.</P>
-        <P pb={3}>This health check is based on <A target="block" color="cyan" href="https://labs.spotify.com/2014/09/16/squad-health-check-model/">Spotify’s Squad Health Check Model</A>.</P>
-      </Div>
-      <Button bg="green" onClick={props.onBegin}>Begin Health Check</Button>
-    </Div>
+    <>
+      <Heading>Begin Team Health&nbsp;Check</Heading>
+      <p sx={{py:3}}>Health checks help you find out how your team is doing, and work together to improve.</p>
+      <p sx={{pb:3}}>This health check is based on <a target="_blank" href="https://labs.spotify.com/2014/09/16/squad-health-check-model/">Spotify’s Squad Health Check Model</a>.</p>
+      <button sx={{bg:'green', fontSize:3}} onClick={props.onBegin}>Begin Health Check</button>
+    </>
   )
 }
 
@@ -1095,154 +1107,153 @@ HealthCheckBegin.propTypes = {
 export default HealthCheckBegin
 ~~~~
 
-Let’s import our new `HealthCheckBegin` into component  and render it in the `READY` state.
+Let’s update our Health Check page by importing our new `HealthCheckBegin` into component and render it in the `READY` state and wrapping the content in `PageContainer`.
 
 *pages/check.js*
 
 ~~~~
 ...
 return (
-  <>
+  <PageContainer>
     {{
       READY: <HealthCheckBegin onBegin={() => setCurrView(views.IN_PROGRESS)} />,
       IN_PROGRESS: <HealthCheck id={id} onComplete={() => { this.setState({view: this.views.COMPLETE}) }} />,
       COMPLETE: <HealthCheckComplete id={id} />
     } [currView] }
-  </>
+  </PageContainer>
 )
 ...
 ~~~~
 
-Now onto the health check itself. Let’s make a `HealthCheckTopic` component for collecting the responses.
+Now onto the health check itself. Let’s make a `HealthCheckTopic` component and a `TopicButton` component for collecting the responses.
 
-The health check topics themselves give us an opportunity to have a little more fun with the design. For the control input to give the rating, we can use React Rangeslider.
-
-~~~~
-npm i react-range-slider
-~~~~
-
-The React Rangeslider component comes with some css. Be sure add that to the global styles in `_pages/_document.js`, along with normalize and some base styles.
-
-For some graphics, we can use some svg icons to indicate the rating. [Font Awesome](https://fontawesome.com/) is a great resource for free vector icons and social logos.
-
-*src/components/HealthCheckIcon.js*
+*components/TopicButton*
 
 ~~~~
+/** @jsx jsx */
+import { jsx } from 'theme-ui'
 import PropTypes from 'prop-types'
-import { colors } from './Theme'
 
-const HealthCheckIcon = (props) => {
+const TopicButton = (props) => (
+  <div sx={{fontSize: 3, my:2, pl:4, pr:3, py:3, border: props.checked ? 'solid 3px' : 'solid 1px', borderColor: props.color, borderRadius:0, position: 'relative'}}>
+    <span sx={{height:0, width: 0, position: 'absolute', top: props.checked ? '14px' : '12px', left: '24px', cursor: 'pointer'}}>
+      <input onChange={props.onChange} checked={props.checked}  type="radio" id={props.id} name={props.name} value={props.value} />
+    </span>
+    <label sx={{width:160, display: 'inline-block'}} htmlFor={props.id}>{props.label}</label>
+  </div>
+)
 
-  return (
-    <>
-      {{
-        0: <svg fill={colors.red} alt="frowny face" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path d="M248 8C111 8 0 119 0 256s111 248 248 248 248-111 248-248S385 8 248 8zm0 448c-110.3 0-200-89.7-200-200S137.7 56 248 56s200 89.7 200 200-89.7 200-200 200zm-80-216c17.7 0 32-14.3 32-32s-14.3-32-32-32-32 14.3-32 32 14.3 32 32 32zm160-64c-17.7 0-32 14.3-32 32s14.3 32 32 32 32-14.3 32-32-14.3-32-32-32zm-80 128c-40.2 0-78 17.7-103.8 48.6-8.5 10.2-7.1 25.3 3.1 33.8 10.2 8.4 25.3 7.1 33.8-3.1 16.6-19.9 41-31.4 66.9-31.4s50.3 11.4 66.9 31.4c8.1 9.7 23.1 11.9 33.8 3.1 10.2-8.5 11.5-23.6 3.1-33.8C326 321.7 288.2 304 248 304z"/></svg>,
-        1: <svg fill={colors.gray} alt="meh face" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path d="M248 8C111 8 0 119 0 256s111 248 248 248 248-111 248-248S385 8 248 8zm0 448c-110.3 0-200-89.7-200-200S137.7 56 248 56s200 89.7 200 200-89.7 200-200 200zm-80-216c17.7 0 32-14.3 32-32s-14.3-32-32-32-32 14.3-32 32 14.3 32 32 32zm160-64c-17.7 0-32 14.3-32 32s14.3 32 32 32 32-14.3 32-32-14.3-32-32-32zm8 144H160c-13.2 0-24 10.8-24 24s10.8 24 24 24h176c13.2 0 24-10.8 24-24s-10.8-24-24-24z"/></svg>,
-        2: <svg fill={colors.green} alt="happy" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path d="M248 8C111 8 0 119 0 256s111 248 248 248 248-111 248-248S385 8 248 8zm0 448c-110.3 0-200-89.7-200-200S137.7 56 248 56s200 89.7 200 200-89.7 200-200 200zm-80-216c17.7 0 32-14.3 32-32s-14.3-32-32-32-32 14.3-32 32 14.3 32 32 32zm160 0c17.7 0 32-14.3 32-32s-14.3-32-32-32-32 14.3-32 32 14.3 32 32 32zm4 72.6c-20.8 25-51.5 39.4-84 39.4s-63.2-14.3-84-39.4c-8.5-10.2-23.7-11.5-33.8-3.1-10.2 8.5-11.5 23.6-3.1 33.8 30 36 74.1 56.6 120.9 56.6s90.9-20.6 120.9-56.6c8.5-10.2 7.1-25.3-3.1-33.8-10.1-8.4-25.3-7.1-33.8 3.1z"/></svg>
-      }[props.rating]}
-    </>
-  )
+TopicButton.propTypes = {
+  id: PropTypes.string.isRequired,
+  name: PropTypes.string.isRequired,
+  label: PropTypes.string.isRequired,
+  value: PropTypes.string.isRequired,
+  color: PropTypes.string.isRequired,
+  checked: PropTypes.bool.isRequired,
+  onChange: PropTypes.func,
 }
 
-HealthCheckIcon.propTypes = {
-  rating: PropTypes.oneOf([0,1,2]).isRequired
-}
-
-export default HealthCheckIcon
+export default TopicButton
 ~~~~
-
-Now we can use the range slider, icons and system html element components in our HealthCheckTopic component.
 
 *components/HealthCheckTopic.js*
 
 ~~~~
+/** @jsx jsx */
+import { jsx } from 'theme-ui'
 import PropTypes from 'prop-types'
 import { useState } from 'react'
-import Slider from 'react-rangeslider'
-import HealthCheckIcon from './HealthCheckIcon'
-import { Div, H2, Span, Input, Label } from 'styled-system-html'
-import Button from './Button'
-import { topicTitles } from '../api/operations'
-import { ratingLabels } from './HealthCheck'
+import { ratingLabels } from '../api/operations'
+import TopicButton from './TopicButton'
 
 const HealthCheckTopic = (props) => {
 
-  const [currRating, setCurrRating] = useState(1)
-  const colors = ['orange','purple','cyan','pink']
-  const color = colors[props.index % colors.length]
+  const [currRating, setCurrRating] = useState(null)
+  
+  const onRatingChange = e => {
+    setCurrRating(parseInt(e.target.value))
+  }
+
+  const onRatingConfirm = e => {
+    props.onConfirm(currRating)
+    setCurrRating(null)
+  }
   
   return (
-    <Div px={4} py={3} border="4px solid" borderColor={color} borderRadius="8px" mx="auto" mt={4} style={{maxWidth:'640px'}}>
-      <Div borderBottom="1px solid" borderColor={color} color={color} py={3} mb={3} display="flex" flexWrap="wrap">
-        <H2 textAlign="left" fontSize={4} fontWeight="400" width={1/2} color={color}>{props.title}</H2>
-        <Div textAlign="right" fontSize={4} fontWeight="400" width={1/2} color={color}>{props.index+1} / {topicTitles.length}</Div>
-      </Div>
-      <Div pb={4}>
-        <Div width={props.width || 180} mx="auto" textAlign="center">
-          <HealthCheckIcon rating={currRating} />
-        </Div>
-        <Slider min={0} max={2} tooltip={false} labels={{0:'Horrible',1:'OK',2:'Awesome'}} value={currRating} onChange={value => setCurrRating(value)} />
-      </Div>
-      <Button bg={color} my={4} onClick={() => {
-          props.onConfirm(currRating)
-          setCurrRating(1)
-        }}
-        children="Next"
-      />
-    </Div>
+    <>
+      <h2 sx={{color:props.color, fontSize:5, pb:2}}>{props.topic.title}</h2>
+      <TopicButton color={props.color} id={ratingLabels[2]} name="rating" label={ratingLabels[2]} value="2" onChange={onRatingChange} checked={currRating === 2}>{props.topic.pos}</TopicButton>
+      <TopicButton color={props.color} id={ratingLabels[1]} name="rating" label={ratingLabels[1]} value="1" onChange={onRatingChange} checked={currRating === 1} />
+      <TopicButton color={props.color} id={ratingLabels[0]} name="rating" label={ratingLabels[0]} value="0" onChange={onRatingChange} checked={currRating === 0}>{props.topic.pos}</TopicButton>
+      <button sx={{mt:4}} disabled={currRating == null} onClick={onRatingConfirm}>Next</button>
+    </>
   )
 }
 
 HealthCheckTopic.propTypes = {
-  title: PropTypes.string.isRequired,
-  onConfirm: PropTypes.func.isRequired
+  topic: PropTypes.object.isRequired,
+  color: PropTypes.string.isRequired,
+  onConfirm: PropTypes.func.isRequired,
 }
 
 export default HealthCheckTopic
 ~~~~
 
-Next, we can update the HealthCheck component which contains both the topics and the confirmation step.
+Next, we can update the `HealthCheck` component which contains both the topics and the confirmation step, for which we will create a `RatingRow` component for listing the ratings made for each topic before confirming. In addition, we have added a Start Over button link to clear out the responses and let them start fresh from the beginning.
+
+*components/RatingRow*
+
+~~~~
+/** @jsx jsx */
+import { jsx } from 'theme-ui'
+import PropTypes from 'prop-types'
+
+const RatingRow = (props) => (
+  <div sx={{diplay:'flex',flexWrap:'wrap',width:'100%',maxWidth:'500px',mx:'auto',fontSize:[2,2,3],py:2}} key={props.title}>
+    <div sx={{color: 'gray', display:'inline-block',width:['100%','50%'],textAlign:['center','right']}}>{props.title}</div> 
+    <div sx={{pl:3,display:'inline-block',width:['100%','50%'],textAlign:['center','left'],fontWeight:'bold'}}>{props.rating}</div>   
+  </div>
+)
+
+RatingRow.propTypes = {
+  title: PropTypes.string.isRequired,
+  rating: PropTypes.string.isRequired,
+}
+
+export default RatingRow
+~~~~
+
 
 *components/HealthCheck.js*
 
 ~~~~
+/** @jsx jsx */
+import { jsx } from 'theme-ui'
 import PropTypes from 'prop-types'
 import { useState } from 'react'
 import { Mutation } from 'react-apollo'
 import gql from 'graphql-tag'
-import { createHealthCheckResponseMutation, getHealthCheckQuery, topicTitles } from '../api/operations'
+import { createHealthCheckResponseMutation, getHealthCheckQuery, topics, ratingLabels } from '../api/operations'
 import HealthCheckTopic from './HealthCheckTopic'
-import HealthCheckIcon from './HealthCheckIcon'
-import Button from './Button.js'
-import { Div, H1, H2 } from 'styled-system-html'
+import RatingRow from './RatingRow'
 
 const HealthCheck = (props) => {
 
-  const [currRating, setCurrRating] = useState(null)
   const [ratings, setRatings] = useState([])
   const [isDone, setIsDone] = useState(false)
   const [loading, setLoading] = useState(false)
+  const colors = ['orange','purple','cyan','pink','green','primary']
   
   const currTopic = ratings.length
-  const ratingLabels = {
-    0: 'Sucky',
-    1: 'OK',
-    2: 'Awesome'
-  }
-
-  const onChange = e => {
-    setCurrRating(parseInt(e.target.value))
-  }
-
-  const onConfirmRating = () => {
-    setRatings(ratings.concat([currRating]))
-    setCurrRating(null)
+  
+  const onConfirmRating = (rating) => {
+    setRatings(ratings.concat([rating]))
   }
 
   return (
     <>
       {
-        ratings.length === topicTitles.length ? (
+        ratings.length === topics.length ? (
           <Mutation
             mutation={createHealthCheckResponseMutation} 
             variables={{ ratings, healthCheckId: props.id }}
@@ -1259,37 +1270,32 @@ const HealthCheck = (props) => {
               createMutation => {
                 return (
                   <>
+                    <h2 sx={{fontSize:1, color: 'primary', pb:3}}>Review your responses</h2>
                     {
                       ratings.map((rating, i) => {
-                        const color = rating === 0 ? 'red' : rating === 1 ? 'gray5' : 'green'
-                        return (
-                          <Div display="inline-block" px={[1,2,2]} py={['2px',2,2]}>
-                            <Div width={[100,120,200,240]} py={[3,3,3,4]} px={[1,2,3]} fontSize={[1,3]} key={'topicRating'+i} bg={color} borderRadius="8px" color="white" style={{overflow:'hidden'}}>
-                              <Div width={[24,36]} mx="auto" pb={[0,0,2]}>
-                                <HealthCheckIcon fill="#fff" rating={rating} />
-                              </Div>
-                              <H2 height={[30,30,'auto']} fontSize={[0,1,2]}>{topicTitles[i]}</H2>
-                            </Div>
-                          </Div>
-                        )
+                        return <RatingRow key={topics[i].title} title={topics[i].title} rating={ratingLabels[rating]} />
                       })
                     }
-                    <Button 
-                      bg={loading ? 'gray' : 'green'} color="white" fontSize={4} py={3} px={4} my={4} borderRadius="8px"
-                      disabled={loading}
-                      onClick={() => {
-                        setLoading(true)
-                        createMutation()
-                      }}
-                      children = {loading ? 'Saving...' : 'Confirm'}
-                    />
+                    <div sx={{textAlign:'center'}}>
+                      <a sx={{mr:4}} href="#" onClick={() => { setRatings([]) }}>Start Over</a>
+                      <button 
+                        sx={{mt:4}}
+                        onClick={() => {
+                          setLoading(true)
+                          createMutation()
+                        }}
+                        children = {loading ? 'Saving...' : 'Confirm'}
+                      />
+                    </div>
                   </>
                 )
               }
             }
           </Mutation>
         ) : (
-          <HealthCheckTopic title={topicTitles[currTopic]} onConfirm={onConfirmRating} index={ratings.length} />
+          <>
+            <HealthCheckTopic color={colors[ratings.length % colors.length]} topic={topics[currTopic]} onConfirm={onConfirmRating}></HealthCheckTopic>
+          </>
         )
       }
     </>
@@ -1304,24 +1310,23 @@ HealthCheck.propTypes = {
 export default HealthCheck
 ~~~~
 
-Let’s update our HealthCheckComplete component as well.
+Let’s update our `HealthCheckComplete` component as well.
 
 *components/HealthCheckComplete.js*
 
 ~~~~
-import { Div, H2, P, A } from 'styled-system-html'
+/** @jsx jsx */
+import { jsx } from 'theme-ui'
 import Link from 'next/link'
 
 export default (props) => {
   return (
-    <Div textAlign="center" py={5}>
-      <H2 color="base" py={5} fontSize={6}>Thanks for completing the health check!</H2>
-      <P>
-        <Link prefetch href={'/results/'+props.id}>
-          <A href={'/check/'+props.id} bg="cyan" color="white" fontSize={4} py={3} px={4} borderRadius="8px" style={{textDecoration:'none'}}>View results</A>
-        </Link>
-      </P>
-    </Div>
+  	<>
+	    <h2 sx={{color:'primary',pb:5}}>Thanks for completing the health check!!</h2>
+	    <Link prefetch href={'/results/'+props.id}>
+	      <a sx={{fontSize:4, bg:'primary', color: 'white', borderRadius:1, p:3, px:4, textDecoration:'none'}} href={'/check/'+props.id}>View results</a>
+	    </Link>
+	</>
   )
 }
 ~~~~
@@ -1331,54 +1336,59 @@ The last component to update is `HealthCheckResults`.
 *components/HealthCheckResults.js*
 
 ~~~~
+/** @jsx jsx */
+import { jsx } from 'theme-ui'
 import PropTypes from 'prop-types'
 import { Query } from 'react-apollo'
-import { getHealthCheckQuery, topicTitles } from '../api/operations'
-import { Div, H1, H2, P, Span } from 'styled-system-html'
-import HealthCheckIcon from '../components/HealthCheckIcon'
+import { getHealthCheckQuery, topics } from '../api/operations'
+import theme from './Theme'
+import Heading from './Heading'
+import HealthCheckIcon from './HealthCheckIcon'
 
-const HealthCheckResults = (props) => (
-  <Query query={getHealthCheckQuery} variables={{id: props.id}}>
-    {({ loading, error, data }) => {
-      if (loading) return <div>Loading...</div>
-      if (error || !data.HealthCheck) return <div>Error: Could not load HealthCheck with id: {this.props.id}</div>
+const RatingBadge = (props) => <span sx={{display:'inline-block', position:'relative', top: '-3px', fontSize:3, mx:1, width:'52px', py:'12px', bg:props.color, color:'white', borderRadius:1}}>{props.children}</span>
 
-      let topicRatings = topicTitles.map(() => { return [0,0,0] })
-      const responses = data.HealthCheck.responses.forEach((response) => {
-   			response.ratings.forEach((rating, topicIndex) => {
-   				topicRatings[topicIndex][rating]++
-   			})
-      })
+const HealthCheckResults = (props) => {
 
-      return (
-        <Div textAlign="center" py={5}>
-          <H1 color="base" pb={3} fontSize={6} fontWeight="400">Health Check Complete!</H1>
-          <P fontSize={3} pb={4}>{data.HealthCheck.responses.length} responses so far. Here are the results...</P>
-          {
-            topicRatings.map((topic, topicIndex) => {
-              const rating = Math.round((topic[1] + (topic[2] * 2))/data.HealthCheck.responses.length)
-              const color = rating === 0 ? 'red' : rating === 1 ? 'gray5' : 'green'
-              return (
-                <Div display="inline-block" p={3} m={3} fontSize={4} key={'topicRating'+topicIndex} bg={color} borderRadius="8px" color="white">
-                  <Div width={48} mx="auto">
-                    <HealthCheckIcon fill="#fff" rating={rating} />
-                  </Div>
-                  <H2 width={240} mx="auto" borderBottom="solid 1px" pb={3} px={4} mb={3} borderColor="#fff" fontSize={1} fontWeight="bold">{topicTitles[topicIndex]}</H2>
-                  <Div fontSize={2}>
-                    <P>Awesome: {topic[2]}</P>
-                    <P>OK: {topic[1]}</P>
-                    <P>Sucky: {topic[0]}</P>
-                  </Div>
-                  <P py={2} fontSize={1} fontStyle="italic">( avg <Span fontSize={0}>{((topic[1] + (topic[2] * 2))/data.HealthCheck.responses.length).toFixed(2)}</Span> )</P>
-                </Div>
-              )
-            })
-          }
-        </Div>
-      )
-    }}
-  </Query>
-)
+  return (
+    <Query query={getHealthCheckQuery} variables={{id: props.id}}>
+      {({ loading, error, data }) => {
+        if (loading) return <div>Loading...</div>
+        if (error || !data.HealthCheck) return <div>Error: Could not load HealthCheck with id: {this.props.id}</div>
+
+        let topicRatings = topics.map(() => { return [0,0,0] })
+        const responses = data.HealthCheck.responses.forEach((response) => {
+     			response.ratings.forEach((rating, topicIndex) => {
+            topicRatings[topicIndex][rating]++
+     			})
+        })
+
+        return (
+          <div sx={{textAlign:'center', width:'100%'}}>
+          	<Heading>Health Check Results</Heading>
+            <p sx={{color:'gray', fontStyle:'italic'}}>{data.HealthCheck.responses.length} responses so far</p>
+          	{
+          		topicRatings.map((topic, topicIndex) => {
+                const rating = Math.round((topic[1] + (topic[2] * 2))/data.HealthCheck.responses.length)
+                const color = rating === 0 ? 'red' : rating === 1 ? 'gray' : 'green'
+          			return (
+                  <div sx={{display:'flex', flexWrap: 'wrap', border: 'solid 1px', borderColor:'#ddd', pt:3, pb:'13px', px:2, fontSize:5, mb:'-1px', width:'100%',maxWidth:'800px',mx:'auto'}} key={'topicRating'+topicIndex}>
+                    <div sx={{width:['100%','100%','50%'], pb:[3,3,0], pt:1,color, pl:[0,0,4], display:'inline-block', textAlign: 'center', fontWeight: 'bold'}}>{topics[topicIndex].title}</div>
+                    <div sx={{width:['100%','100%','50%'], textAlign: 'center'}}>
+                      <RatingBadge color="red">{topic[0]}</RatingBadge>
+                      <RatingBadge color="gray">{topic[1]}</RatingBadge>
+                      <RatingBadge color="green">{topic[2]}</RatingBadge>
+                      <span sx={{pl:'48px', pr:4, py:0, position: 'relative'}}><span sx={{position:'absolute', top:0, left:'27px'}}><HealthCheckIcon fill={theme.colors[color]} size={48} rating={rating} /></span></span>
+                    </div>
+            			</div>
+                )
+              })
+          	}
+          </div>
+        )
+      }}
+    </Query>
+  )
+}
 
 HealthCheckResults.propTypes = {
   id: PropTypes.string.isRequired
@@ -1387,36 +1397,7 @@ HealthCheckResults.propTypes = {
 export default HealthCheckResults
 ~~~~
 
-#### Responsive Style Props
-
-Styled System makes it really easy to apply responsive styles to our components. We can change our styling properties to use an array syntax to apply different values across the breakpoints defined in our theme.
-
-For example, in our `HealthCheckBegin` component, we can adjust the padding of the container element and font size of the heading to be smaller at the smallest breakpoint.
-
-*components/HealthCheckBegin*
-
-~~~~
-import PropTypes from 'prop-types'
-import { Div, H1, P, A } from  'styled-system-html'
-import Button from './Button'
-import HealthCheckIntro from './HealthCheckIntro'
-
-const HealthCheckBegin = (props) => (
-  <Div textAlign="center" py={[3,4]} px={3}>
-    <H1 color="base" pt={4} pb={3} fontSize={[5,6]}>Begin Team Health Check</H1>
-    <HealthCheckIntro />
-    <Button bg="green" onClick={props.onBegin}>Begin Health Check</Button>
-  </Div>
-)
-
-HealthCheckBegin.propTypes = {
-  onBegin: PropTypes.func.isRequired
-}
-
-export default HealthCheckBegin
-~~~~
-
-With hot reload running in a browser window, and a text editor in another, it is really quick and simple to make these adjustments across all the views in our app.
+By running hot reload, courtesy of `now dev` in a browser window, and a text editor in another, making these adjustments across all the views in our app can be done pretty quickly.
 
 
 ## Part 6

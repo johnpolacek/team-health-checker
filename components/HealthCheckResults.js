@@ -1,8 +1,13 @@
+/** @jsx jsx */
+import { jsx } from 'theme-ui'
 import PropTypes from 'prop-types'
 import { Query } from 'react-apollo'
-import { getHealthCheckQuery, topicTitles } from '../api/operations'
-import { Div, H1, H2, P, Span } from 'styled-system-html'
-import HealthCheckIcon from '../components/HealthCheckIcon'
+import { getHealthCheckQuery, topics } from '../api/operations'
+import theme from './Theme'
+import Heading from './Heading'
+import HealthCheckIcon from './HealthCheckIcon'
+
+const RatingBadge = (props) => <span sx={{display:'inline-block', position:'relative', top: '-3px', fontSize:3, mx:1, width:'52px', py:'12px', bg:props.color, color:'white', borderRadius:1}}>{props.children}</span>
 
 const HealthCheckResults = (props) => {
 
@@ -12,7 +17,7 @@ const HealthCheckResults = (props) => {
         if (loading) return <div>Loading...</div>
         if (error || !data.HealthCheck) return <div>Error: Could not load HealthCheck with id: {this.props.id}</div>
 
-        let topicRatings = topicTitles.map(() => { return [0,0,0] })
+        let topicRatings = topics.map(() => { return [0,0,0] })
         const responses = data.HealthCheck.responses.forEach((response) => {
      			response.ratings.forEach((rating, topicIndex) => {
             topicRatings[topicIndex][rating]++
@@ -20,30 +25,27 @@ const HealthCheckResults = (props) => {
         })
 
         return (
-          <Div textAlign="center" py={[4,5]} mb={[4,5]}>
-            <H1 color="base" pb={3} fontSize={[5,6]} fontWeight="400">Team Health Check Results</H1>
-            <P fontSize={[2,3]} pb={[3,4]}>{data.HealthCheck.responses.length} responses so far. Here are the results...</P>
-            {
-              topicRatings.map((topic, topicIndex) => {
+          <div sx={{textAlign:'center', width:'100%'}}>
+          	<Heading>Health Check Results</Heading>
+            <p sx={{color:'gray', fontStyle:'italic'}}>{data.HealthCheck.responses.length} responses so far</p>
+          	{
+          		topicRatings.map((topic, topicIndex) => {
                 const rating = Math.round((topic[1] + (topic[2] * 2))/data.HealthCheck.responses.length)
-                const color = rating === 0 ? 'red' : rating === 1 ? 'gray5' : 'green'
-                return (
-                  <Div display="inline-block" p={3} m={3} fontSize={4} key={'topicRating'+topicIndex} bg={color} borderRadius="8px" color="white">
-                    <Div width={48} mx="auto">
-                      <HealthCheckIcon fill="#fff" rating={rating} />
-                    </Div>
-                    <H2 width={240} mx="auto" borderBottom="solid 1px" pb={3} px={4} mb={3} borderColor="#fff" fontSize={1} fontWeight="bold">{topicTitles[topicIndex]}</H2>
-                    <Div fontSize={2}>
-                      <P>Awesome: {topic[2]}</P>
-                      <P>OK: {topic[1]}</P>
-                      <P>Sucky: {topic[0]}</P>
-                    </Div>
-                    <P py={2} fontSize={1} fontStyle="italic">( avg <Span fontSize={0}>{((topic[1] + (topic[2] * 2))/data.HealthCheck.responses.length).toFixed(2)}</Span> )</P>
-                  </Div>
+                const color = rating === 0 ? 'red' : rating === 1 ? 'gray' : 'green'
+          			return (
+                  <div sx={{display:'flex', flexWrap: 'wrap', border: 'solid 1px', borderColor:'#ddd', pt:3, pb:'13px', px:2, fontSize:5, mb:'-1px', width:'100%',maxWidth:'800px',mx:'auto'}} key={'topicRating'+topicIndex}>
+                    <div sx={{width:['100%','100%','50%'], pb:[3,3,0], pt:1,color, pl:[0,0,4], display:'inline-block', textAlign: 'center', fontWeight: 'bold'}}>{topics[topicIndex].title}</div>
+                    <div sx={{width:['100%','100%','50%'], textAlign: 'center'}}>
+                      <RatingBadge color="red">{topic[0]}</RatingBadge>
+                      <RatingBadge color="gray">{topic[1]}</RatingBadge>
+                      <RatingBadge color="green">{topic[2]}</RatingBadge>
+                      <span sx={{pl:'48px', pr:4, py:0, position: 'relative'}}><span sx={{position:'absolute', top:0, left:'27px'}}><HealthCheckIcon fill={theme.colors[color]} size={48} rating={rating} /></span></span>
+                    </div>
+            			</div>
                 )
               })
-            }
-          </Div>
+          	}
+          </div>
         )
       }}
     </Query>

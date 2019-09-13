@@ -1,8 +1,8 @@
+/** @jsx jsx */
+import { jsx } from 'theme-ui'
 import { useState } from 'react';
 import { Mutation } from 'react-apollo'
 import { createHealthCheckMutation } from '../api/operations'
-import { Div, H2, P, A, Input } from 'styled-system-html'
-import Button from './Button'
 import Link from 'next/link'
 
 export default (props) => {
@@ -14,36 +14,36 @@ export default (props) => {
       {
         id ? (
           <>
-            <H2 color="green" pb={4} fontSize={[4,5]} fontWeight="600">You created a new Health Check!</H2>
-            <P py={3}>
+            <h2>You created a new Health Check!</h2>
+            <p sx={{py:4, fontSize:3}}>
               <Link prefetch href={'/check/'+id}>
-                <A href={'/check/'+id} color="base" fontSize={[3,4]}>Go To Health Check</A>
+                <a>View health check</a>
               </Link>
-            </P>
-            <Div py={4} mb={4}>
-              <P pb={3} fontSize={[2,3]}>You can share it with your friends via&nbsp;this&nbsp;link:</P>
-              <Input width={340} fontSize={[0,1,2]} p={2} readonly type="text" value={window.location.href+'check/'+id} /> 
-            </Div>
+            </p>
+            <div sx={{width:'100%', maxWidth:'480px', py:3}}>
+              <p>You can share it with your friends by sharing this link:</p>
+              <input sx={{width:'100%', p:3}} readonly type="text" value={window.location.href+'/check/'+id} /> 
+            </div>
           </>
         ) : (
-          <Mutation 
-            mutation={createHealthCheckMutation} 
-            onCompleted={(data) => {setId(data.createHealthCheck.id)}}
-          >
-            {
-              createMutation => <Button 
-                disabled={loading}
-                bg={loading ? 'gray' : 'green'} color="white" 
-                onClick={() => {
-                  if (!loading) {
+          <>
+            <p>Health checks help you find out how your team is doing, and work together&nbsp;to&nbsp;improve.</p>
+            <p sx={{pb:4}}>This health check is based on <a sx={{whiteSpace:'nowrap'}} href="https://labs.spotify.com/2014/09/16/squad-health-check-model/">Spotify’s Squad Health Check Model</a>.</p>
+            <Mutation 
+              mutation={createHealthCheckMutation} 
+              onCompleted={(data) => {setId(data.createHealthCheck.id)}}
+            >
+              {
+                createMutation => <button 
+                  onClick={() => {
                     setLoading(true)
                     createMutation()
-                  }
-                }}
-                children = {loading ? 'Loading...' : 'Create New Health Check'}
-              />
-            }
-          </Mutation>
+                  }}
+                  children = {loading ? 'Loading...' : 'Create New Health Check'}
+                />
+              }
+            </Mutation>
+          </>
         )
       }
     </>
