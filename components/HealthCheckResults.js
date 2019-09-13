@@ -25,19 +25,22 @@ const HealthCheckResults = (props) => {
         })
 
         return (
-          <div sx={{textAlign:'center'}}>
+          <div sx={{textAlign:'center', width:'100%'}}>
           	<Heading>Health Check Results</Heading>
+            <p sx={{color:'gray', fontStyle:'italic'}}>{data.HealthCheck.responses.length} responses so far</p>
           	{
           		topicRatings.map((topic, topicIndex) => {
                 const rating = Math.round((topic[1] + (topic[2] * 2))/data.HealthCheck.responses.length)
                 const color = rating === 0 ? 'red' : rating === 1 ? 'gray' : 'green'
           			return (
-                  <div sx={{border: 'solid 1px', borderColor:'#ddd', pt:3, pb:'13px', px:2, fontSize:5, mb:'-1px'}} key={'topicRating'+topicIndex}>
-                    <span sx={{pt:1,color, display:'inline-block', width: 420, textAlign: 'center', fontWeight: 'bold'}}>{topics[topicIndex].title}</span>
-                    <RatingBadge color="red">{topic[0]}</RatingBadge>
-                    <RatingBadge color="gray">{topic[1]}</RatingBadge>
-                    <RatingBadge color="green">{topic[2]}</RatingBadge>
-                    <span sx={{px:'48px', py:0, position: 'relative'}}><span sx={{position:'absolute', top:0, left:'27px'}}><HealthCheckIcon fill={theme.colors[color]} size={48} rating={rating} /></span></span>
+                  <div sx={{display:'flex', flexWrap: 'wrap', border: 'solid 1px', borderColor:'#ddd', pt:3, pb:'13px', px:2, fontSize:5, mb:'-1px', width:'100%',maxWidth:'800px',mx:'auto'}} key={'topicRating'+topicIndex}>
+                    <div sx={{width:['100%','100%','50%'], pb:[3,3,0], pt:1,color, pl:[0,0,4], display:'inline-block', textAlign: 'center', fontWeight: 'bold'}}>{topics[topicIndex].title}</div>
+                    <div sx={{width:['100%','100%','50%'], textAlign: 'center'}}>
+                      <RatingBadge color="red">{topic[0]}</RatingBadge>
+                      <RatingBadge color="gray">{topic[1]}</RatingBadge>
+                      <RatingBadge color="green">{topic[2]}</RatingBadge>
+                      <span sx={{pl:'48px', pr:4, py:0, position: 'relative'}}><span sx={{position:'absolute', top:0, left:'27px'}}><HealthCheckIcon fill={theme.colors[color]} size={48} rating={rating} /></span></span>
+                    </div>
             			</div>
                 )
               })

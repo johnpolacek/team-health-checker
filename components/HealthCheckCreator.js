@@ -15,12 +15,12 @@ export default (props) => {
         id ? (
           <>
             <h2>You created a new Health Check!</h2>
-            <p sx={{p:4, fontSize:3}}>
+            <p sx={{py:4, fontSize:3}}>
               <Link prefetch href={'/check/'+id}>
                 <a>View health check</a>
               </Link>
             </p>
-            <div sx={{width:'100%', maxWidth:'480px', p:3}}>
+            <div sx={{width:'100%', maxWidth:'480px', py:3}}>
               <p>You can share it with your friends by sharing this link:</p>
               <input sx={{width:'100%', p:3}} readonly type="text" value={window.location.href+'/check/'+id} /> 
             </div>

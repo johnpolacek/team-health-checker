@@ -41,19 +41,23 @@ const HealthCheck = (props) => {
               createMutation => {
                 return (
                   <>
+                    <h2 sx={{fontSize:1, color: 'primary', pb:3}}>Review your responses</h2>
                     {
                       ratings.map((rating, i) => {
-                        return <RatingRow title={topics[i].title} rating={ratingLabels[rating]} />
+                        return <RatingRow key={topics[i].title} title={topics[i].title} rating={ratingLabels[rating]} />
                       })
                     }
-                    <button 
-                      sx={{mt:4}}
-                      onClick={() => {
-                        setLoading(true)
-                        createMutation()
-                      }}
-                      children = {loading ? 'Saving...' : 'Confirm'}
-                    />
+                    <div sx={{textAlign:'center'}}>
+                      <a sx={{mr:4}} href="#" onClick={() => { setRatings([]) }}>Start Over</a>
+                      <button 
+                        sx={{mt:4}}
+                        onClick={() => {
+                          setLoading(true)
+                          createMutation()
+                        }}
+                        children = {loading ? 'Saving...' : 'Confirm'}
+                      />
+                    </div>
                   </>
                 )
               }

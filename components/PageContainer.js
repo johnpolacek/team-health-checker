@@ -10,7 +10,7 @@ export default (props) => (
     alignItems: 'center',
     textAlign: 'center',
     pt: 4,
-    px: 4,
+    px: [3,4],
     pb: 5,
   }}>{props.children}</div>
 )
