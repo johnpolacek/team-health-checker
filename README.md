@@ -158,6 +158,26 @@ Now that we can create a health check, we need to be able to share a url with ou
 
 [Now](https://zeit.co/now) is a serverless deployment service from [Zeit](https://zeit.co), the makers of Next.js. We will be using Now 2.0 to configure our routes - see their [Guide to Custom Serverless Next.js Routing](https://zeit.co/guides/custom-next-js-server-to-routes/).
 
+First, we will need to sign up for an account and install the CLI. Refer to the [docs](https://zeit.co/docs) for more info and installation instructions.
+
+To verify you have installed and are authorized to deploy, from your CLI run:
+
+~~~~
+$ now whoami
+~~~~
+
+It should output the username you set up on now. 
+
+Next, we need to target our deployment for a serverless environment.
+
+*next.config.js*
+
+~~~~
+module.exports = {
+  target: 'serverless'
+}
+~~~~
+
 Define a new route at `/check/:id` in a now.json config file, and specify that our build step will use `@now/next`.
 
 *now.json*
@@ -1405,77 +1425,6 @@ By running hot reload, courtesy of `now dev` in a browser window, and a text edi
 Now that we have a working prototype of our app, we should add testing. 
 
 Some schools of thought would say that should have been step #1, but I have found that when you are still in the creative, figuring-it-out stage, it can be best to build a stable version first, with minimal features, then add the testing, especially before the project gets too big.
-
-## Part 7
-
-With our tests in place, we can feel confident enough to share our app with the world, or at least some close friends. 
-
-To deploy our app, we will use [Now](https://zeit.co/now) by [Zeit](https://zeit.co).
-
-First, we will need to sign up for an account and install the CLI. Refer to the [docs](https://zeit.co/docs) for more info and installation instructions.
-
-To verify you have installed and are authorized to deploy, from your CLI run:
-
-~~~~
-$ now whoami
-~~~~
-
-It should output the username you set up on now. 
-
-Next, we need to target our deployment for a serverless environment.
-
-*next.config.js*
-
-~~~~
-module.exports = {
-  target: 'serverless'
-}
-~~~~
-
-Then we create a now config file to point at our next config file and use the next build setup.
-
-*now.json*
-
-~~~~
-{
-  "version": 2,
-  "builds": [{ "src": "next.config.js", "use": "@now/next" }]
-}
-~~~~
-
-At the time of this writing, we have a dependency on next.js version 8 canary. It is likely by the time you read this, 8.0.0 will have been released, and no changes to `package.json` will be necessary. If not, update the version of next: 
-
-*package.json*
-
-~~~~
-...
-"next": "canary",
-...
-~~~~
-
-With that done, in the command line we can run one command to deploy our project
-
-~~~~
-$ now
-~~~~
-
-https://uxplanet.org/4-creative-concepts-of-slider-control-1f8839b05943
-
-http://blog.crisp.se/wp-content/uploads/2014/02/Team-barometer-self-evaluation-tool-Cards.pdf
-https://blog.crisp.se/2014/01/30/jimmyjanlen/team-barometer-self-evaluation-tool
-
-https://medium.com/the-liberators/agile-teams-dont-use-happiness-metrics-measure-team-morale-3050b339d8af
-
-https://www.atlassian.com/team-playbook/health-monitor/project-teams
-
-https://sidlee.com/en/?ref=bestwebsite.gallery
-https://wellset.co/home
-https://www.sysdoc.com/
-https://futurecomes.com/
-https://rallyinteractive.com/
-http://thrivesolo.com/
-https://econsultancy.com/21-first-class-examples-of-effective-web-form-design/
-
 
 
 
