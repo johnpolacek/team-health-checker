@@ -1,0 +1,16 @@
+language: node_js
+node_js:
+    - "9.4.0"
+addons:
+  sauce_connect:
+    username: johnpolacek
+before_script:
+- npm install
+- npm i -g now
+script:
+- now dev &
+- sleep 5s
+- npm run cy:run
+env:
+  global:
+    secure: gqRtVWESJfZoAzNfhM0Ole2ED7Wzc8AeoFPz+EKNiNjqy2y3LCQCPxCC4qrO4NXZfaDqoSkrbvR6x4OuLSycrP22HNtDpQ/DBFwYtXP55PIi9GFHyMZhSqb1DSx+hVOBie3juk7HguDDMj/IJlU0MlYANlVlcyEDH1IvoWzzGYJqAr+EQ7poCPQ6j1EzpmtM3FatkRkqyFay7ZTWLZBK0DE3hcsFKRzholGtKEr7Wb6zGpLqbO/dNpKupU5hWqBne8jLovW9j096649QNGGIYie8xZ8ihP+hOulUPPXxjpET7iZ54USr59qBC0d7ZFTxw3zhIce1nIRgs45i5WEcOBwZtFi1BIhG87YaCBIIL2xy+DHBBdIF2MQ0qZdILr647tuKEPtZX9NoIR6X3ZG4ofMOdB/5qvemSQEhy0ysxs4ICXoUqDtFoZ4Tx1sS+6tHSjFm4ajjQX/E+G1XBlHKVTpK0W+2YgzaAWw+Qc0A7krBRtBTTcpAJ19QMQgVj0c0iiXdbDwgV+mmpV1Py8m0BDN2TOnu9Q4nH/JDF/xqLNJXPSFyfcYvUId/oXgP8BZYksPG0S8lR3rWFJFIgmNXcgsepFOLO/8jJaRXx/acYJFu8cVOkIxqH37yL52rG7fhnRH6jXg9zRrRJNlx96aMI2AMtayYKGBOEz/wLZwxZXc=

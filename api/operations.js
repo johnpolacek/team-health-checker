@@ -2,7 +2,7 @@ import gql from 'graphql-tag';
 
 export const topics = [
   {
-    title:'Easy to release',
+    title:'Easy to Release',
     pos:'Releasing is simple, safe, painless and mostly automated.',
     neg:'Releasing is risky, painful, lots of manual work and takes forever.'
   },

@@ -1424,8 +1424,59 @@ By running hot reload, courtesy of `now dev` in a browser window, and a text edi
 
 Now that we have a working prototype of our app, we should add testing. 
 
-Some schools of thought would say that should have been step #1, but I have found that when you are still in the creative, figuring-it-out stage, it can be best to build a stable version first, with minimal features, then add the testing, especially before the project gets too big.
+Some would say testing should step #1, but I’ve found when you’re still in the creative, figuring-it-out stage, it can be best to build a stable version first, with minimal features, then add the testing once you are at the point where you might start sharing it with people.
 
+We are going to use [Cypress](https://www.cypress.io/) as our testing framework.
+
+~~~~
+npm install cypress
+~~~~
+
+With Cypress installed, add some scripts to `package.json`.
+
+*package.json*
+
+~~~~
+...
+"scripts": {
+    "cy:open": "cypress open",
+    "cy:debug": "DEBUG=cypress:* cypress open",
+    "cy:run": "cypress run",
+...
+~~~~
+
+When Cypress is opened it will create a `cypress` directory in the project which is where we will write our tests, and an empty `cypress.json` config file.
+
+~~~~
+npm run cy:open
+~~~~
+
+Make some updates to the config.
+
+*cypress.json*
+
+~~~~
+{
+  "baseUrl": "http://localhost:3000",
+  "chromeWebSecurity": false,
+  "video": false
+}
+~~~~
+
+Now we are ready to write some tests. Create a test file.
+
+*cypress/integration/HealthCheck.spec.js*
+
+~~~~
+describe('Health Check', function() {
+  it('can be created', function() {
+    cy.visit('/')
+    cy.get('h1').contains('Team Health Checker')
+  })
+})
+~~~~
+
+We should see our test appear in the Cypress Test Runner app window. Make sure our local dev server is running via `now dev`, then click the test and the runner will open a new browser window. 
 
 
 

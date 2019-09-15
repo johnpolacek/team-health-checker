@@ -24,10 +24,12 @@ const HealthCheckResults = (props) => {
      			})
         })
 
+        const numResponsesText = data.HealthCheck.responses.length + ' response' + (data.HealthCheck.responses.length > 1 ? 's' : '') + ' so far'
+
         return (
           <div sx={{textAlign:'center', width:'100%'}}>
           	<Heading>Health Check Results</Heading>
-            <p sx={{color:'gray', fontStyle:'italic'}}>{data.HealthCheck.responses.length} responses so far</p>
+            <p sx={{color:'gray', fontStyle:'italic'}}>{numResponsesText}</p>
           	{
           		topicRatings.map((topic, topicIndex) => {
                 const rating = Math.round((topic[1] + (topic[2] * 2))/data.HealthCheck.responses.length)

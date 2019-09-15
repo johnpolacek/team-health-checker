@@ -9,6 +9,14 @@ export default (props) => {
   const [id, setId] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  let url = ''
+  if (typeof(window) !== 'undefined') {
+    url = window.location.href
+    if (url.lastIndexOf('/') === url.length - 1) {
+      url = url.slice(0, -1)
+    }
+  }
+
   return (
     <>
       {
@@ -22,7 +30,7 @@ export default (props) => {
             </p>
             <div sx={{width:'100%', maxWidth:'480px', py:3}}>
               <p>You can share it with your friends by sharing this link:</p>
-              <input sx={{width:'100%', p:3}} readOnly type="text" value={window.location.href+'/check/'+id} /> 
+              <input id="shareLink" sx={{width:'100%', p:3}} readOnly type="text" value={url+'/check/'+id} /> 
             </div>
           </>
         ) : (
