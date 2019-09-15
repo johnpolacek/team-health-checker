@@ -22,7 +22,7 @@ export default (props) => {
             </p>
             <div sx={{width:'100%', maxWidth:'480px', py:3}}>
               <p>You can share it with your friends by sharing this link:</p>
-              <input sx={{width:'100%', p:3}} readonly type="text" value={window.location.href+'/check/'+id} /> 
+              <input sx={{width:'100%', p:3}} readOnly type="text" value={window.location.href+'/check/'+id} /> 
             </div>
           </>
         ) : (
