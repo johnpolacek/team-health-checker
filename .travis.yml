@@ -19,7 +19,7 @@ before_script:
 - npm i -g now
 script:
 - now dev &
-- sleep 5s
+- sleep 20s
 - npm run cy:run
 env:
   global:
