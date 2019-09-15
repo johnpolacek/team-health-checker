@@ -1,5 +1,5 @@
-# Building and Deploying a SSR Web App
-###### with React, Apollo, Next.js, Now, Theme UI and Cypress
+# Building a Universal Web App with Next.js and Friends
+###### React, Apollo, Next.js, Now, Theme UI and Cypress
 
 ----
 <br/>
@@ -15,11 +15,11 @@ Most examples of health checks are analog, done with cards and everyone gathered
 
 Our goal is to create an online version of this, that can be done in during a team video chat.
 
-### SSR Web Apps 
+### Univeral Web Apps 
 
-The ability to build isomorphic (~aka universal) web apps is that the same React and JS code can run on the client and the server. 
+The ability to build universal (~aka isomorphic) SSR web apps is that the same React and JS code can run on the client and the server. 
 
-The benefit here is that you can get a fast page load on that first visit, where, just like on a traditional server-side web architecture, the server sends just what is needed to the client, the initial minified render of the page, inlining critical styles and the app bundle. From there the client takes over, providing the faster rendering experience you can get from a single-page app when navigating between views.
+The benefit here is that you can get a fast page load on that first visit. Just like on a traditional server-side web architecture, the server sends only what is needed to the client, the initial minified render of the page. From there the client takes over, providing the faster rendering experience of a single-page app when navigating between views.
 
 #### Next.js
 
