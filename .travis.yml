@@ -1,9 +1,19 @@
 language: node_js
 node_js:
-    - "9.4.0"
+    - 10
 addons:
   sauce_connect:
     username: johnpolacek
+  apt:
+    packages:
+      # Ubuntu 16+ does not install this dependency by default, so we need to install it ourselves
+      - libgconf-2-4
+## Cache NPM folder and Cypress binary
+## to avoid downloading Cypress again and again
+cache:
+  directories:
+    - ~/.npm
+    - ~/.cache
 before_script:
 - npm install
 - npm i -g now
