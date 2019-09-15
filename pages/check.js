@@ -24,16 +24,21 @@ const Check = ({ id }) => {
           if (loading) return <div>Loading...</div>
           if (error || !data.HealthCheck) return <div>Error: Could not load HealthCheck with id: {id}</div>
           return (
-            <PageContainer>
-              {{
-                READY:<HealthCheckBegin onBegin={() => setCurrView(views.IN_PROGRESS)} />,
-                IN_PROGRESS: <HealthCheck id={id} onComplete={(data) => {
-                  console.log('COMPLETE!', data)
-                  setCurrView(views.COMPLETE)}} 
-                />,
-                COMPLETE: <HealthCheckComplete id={id} />
-              } [currView] }
-            </PageContainer>
+            <>
+              <Head>
+                <title>Team Health Checker</title>
+              </Head>
+              <PageContainer>
+                {{
+                  READY:<HealthCheckBegin onBegin={() => setCurrView(views.IN_PROGRESS)} />,
+                  IN_PROGRESS: <HealthCheck id={id} onComplete={(data) => {
+                    console.log('COMPLETE!', data)
+                    setCurrView(views.COMPLETE)}} 
+                  />,
+                  COMPLETE: <HealthCheckComplete id={id} />
+                } [currView] }
+              </PageContainer>
+            </>
           )
         }}
       </Query>

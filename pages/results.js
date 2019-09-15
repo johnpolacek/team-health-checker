@@ -14,9 +14,14 @@ const Results = ({ id }) => (
           } else if (error || !data.HealthCheck) {
             return <div>Error: Could not load HealthCheck with id: {id}</div>
           } else {
-            return <PageContainer>
-              <HealthCheckResults id={id} />
-            </PageContainer>
+            return <>
+              <Head>
+                <title>Team Health Checker | Results</title>
+              </Head>
+              <PageContainer>
+                <HealthCheckResults id={id} />
+              </PageContainer>
+            </>
           }
         }}
       </Query>
