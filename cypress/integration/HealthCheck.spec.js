@@ -8,11 +8,13 @@ describe('Health Check', function() {
     
     // create new health check
     cy.get('button').contains('Create New Health Check').click()
+    cy.wait(2000)
     cy.get('h2').contains('You created a new Health Check!').should('be.visible')
     cy.get('#shareLink').invoke('val').should('contain', 'localhost:3000/check/')
     
     // take health check
     cy.get('a').contains('View health check').click()
+    cy.wait(2000)
     cy.get('button').contains('Begin Health Check').click()
     cy.get('h2').contains('Easy to Release').should('be.visible')
 
