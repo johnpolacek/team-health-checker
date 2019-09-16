@@ -1479,7 +1479,194 @@ describe('Health Check', function() {
 
 We should see our test appear in the Cypress Test Runner app window. Make sure our local dev server is running via `now dev`, then click the test and the runner will open a new browser window. 
 
+We can write a complete end-to-end test that creates the health check, chooses a response to each topic, then verifies the results.
+
+*cypress/integration/HealthCheck.spec.js*
+
+~~~~
+describe('Health Check', function() {
+
+  it('can be created', function() {
+
+    // visit site
+    cy.visit('/')
+    cy.get('h1').contains('Team Health Checker').should('be.visible')
+    
+    // create new health check
+    cy.get('button').contains('Create New Health Check').click()
+    cy.wait(2000)
+    cy.get('h2').contains('You created a new Health Check!').should('be.visible')
+    cy.get('#shareLink').invoke('val').should('contain', 'localhost:3000/check/')
+    
+    // take health check
+    cy.get('a').contains('View health check').click()
+    cy.wait(2000)
+    cy.get('button').contains('Begin Health Check').click()
+    cy.get('h2').contains('Easy to Release').should('be.visible')
+
+    // require selection to advance
+    cy.get('button').contains('Next').should('be.disabled')
+    
+    // fill out health check
+    cy.fillOutHealthCheck()
+
+    // view results
+    cy.get('h2').contains('Thanks for completing the health check!!').should('be.visible')
+    cy.get('a').contains('View results').click()
+    cy.get('h1').contains('Health Check Results').should('be.visible')
+    cy.get('p').contains('1 response so far').should('be.visible')
+    cy.verifyRating('Easy to Release', 0, 0, 1)
+    cy.verifyRating('Suitable Process', 0, 1, 0)
+    cy.verifyRating('Health of Codebase', 1, 0, 0)
+    cy.verifyRating('Delivering Value', 0, 0, 1)
+    cy.verifyRating('Speed', 0, 1, 0)
+    cy.verifyRating('Mission', 1, 0, 0)
+    cy.verifyRating('Fun', 0, 0, 1)
+    cy.verifyRating('Learning', 0, 1, 0)
+    cy.verifyRating('Support', 1, 0, 0)
+    cy.verifyRating('Pawns or Players', 0, 0, 1)
+    cy.verifyRating('Teamwork', 0, 1, 0)
+
+    // take again
+    cy.go('back')
+    cy.get('button').contains('Begin Health Check').click()
+    cy.fillOutHealthCheck()
+
+    // view results
+    cy.get('h2').contains('Thanks for completing the health check!!').should('be.visible')
+    cy.get('a').contains('View results').click()
+    cy.get('h1').contains('Health Check Results').should('be.visible')
+    cy.get('p').contains('2 responses so far').should('be.visible')
+    cy.verifyRating('Easy to Release', 0, 0, 2)
+    cy.verifyRating('Suitable Process', 0, 2, 0)
+    cy.verifyRating('Health of Codebase', 2, 0, 0)
+    cy.verifyRating('Delivering Value', 0, 0, 2)
+    cy.verifyRating('Speed', 0, 2, 0)
+    cy.verifyRating('Mission', 2, 0, 0)
+    cy.verifyRating('Fun', 0, 0, 2)
+    cy.verifyRating('Learning', 0, 2, 0)
+    cy.verifyRating('Support', 2, 0, 0)
+    cy.verifyRating('Pawns or Players', 0, 0, 2)
+    cy.verifyRating('Teamwork', 0, 2, 0)
+  })
+})
+
+~~~~
+
+*cypress/support/commands.js*
+
+~~~~
+Cypress.Commands.add('verifyRating', (topicTitle, count0, count1, count2) => {
+  cy.get('div').contains(topicTitle).parent().find('span').eq(0).invoke('text').should('eq',count0.toString())
+  cy.get('div').contains(topicTitle).parent().find('span').eq(1).invoke('text').should('eq',count1.toString())
+  cy.get('div').contains(topicTitle).parent().find('span').eq(2).invoke('text').should('eq',count2.toString())
+})
+
+Cypress.Commands.add('fillOutHealthCheck', test => {
+  cy.get('h2').contains('Easy to Release').should('be.visible')
+  cy.get('label').contains('Awesome').click()
+  cy.get('button').contains('Next').click()
+
+  cy.get('h2').contains('Suitable Process').should('be.visible')
+  cy.get('label').contains('OK').click()
+  cy.get('button').contains('Next').click()
+
+  cy.get('h2').contains('Health of Codebase').should('be.visible')
+  cy.get('label').contains('Sucky').click()
+  cy.get('button').contains('Next').click()
+
+  cy.get('h2').contains('Delivering Value').should('be.visible')
+  cy.get('label').contains('Awesome').click()
+  cy.get('button').contains('Next').click()
+
+  cy.get('h2').contains('Speed').should('be.visible')
+  cy.get('label').contains('OK').click()
+  cy.get('button').contains('Next').click()
+
+  cy.get('h2').contains('Mission').should('be.visible')
+  cy.get('label').contains('Sucky').click()
+  cy.get('button').contains('Next').click()
+
+  cy.get('h2').contains('Fun').should('be.visible')
+  cy.get('label').contains('Awesome').click()
+  cy.get('button').contains('Next').click()
+
+  cy.get('h2').contains('Learning').should('be.visible')
+  cy.get('label').contains('OK').click()
+  cy.get('button').contains('Next').click()
+
+  cy.get('h2').contains('Support').should('be.visible')
+  cy.get('label').contains('Sucky').click()
+  cy.get('button').contains('Next').click()
+
+  cy.get('h2').contains('Pawns or Players').should('be.visible')
+  cy.get('label').contains('Awesome').click()
+  cy.get('button').contains('Next').click()
+
+  cy.get('h2').contains('Teamwork').should('be.visible')
+  cy.get('label').contains('OK').click()
+  cy.get('button').contains('Next').click()
+
+  // confirm responses
+  cy.get('h2').contains('Review your responses').should('be.visible')
+  cy.get('div').contains('Easy to Release').parent().find('div').contains('Awesome').should('be.visible')
+  cy.get('div').contains('Suitable Process').parent().find('div').contains('OK').should('be.visible')
+  cy.get('div').contains('Health of Codebase').parent().find('div').contains('Sucky').should('be.visible')
+  cy.get('div').contains('Delivering Value').parent().find('div').contains('Awesome').should('be.visible')
+  cy.get('div').contains('Speed').parent().find('div').contains('OK').should('be.visible')
+  cy.get('div').contains('Mission').parent().find('div').contains('Sucky').should('be.visible')
+  cy.get('div').contains('Fun').parent().find('div').contains('Awesome').should('be.visible')
+  cy.get('div').contains('Learning').parent().find('div').contains('OK').should('be.visible')
+  cy.get('div').contains('Support').parent().find('div').contains('Sucky').should('be.visible')
+  cy.get('div').contains('Pawns or Players').parent().find('div').contains('Awesome').should('be.visible')
+  cy.get('div').contains('Teamwork').parent().find('div').contains('OK').should('be.visible')
+  cy.get('button').contains('Confirm').click()
+})
+~~~~
+
+Now that we have testing running locally, the next step is to automate our tests to run every time we push any changes. [Travis CI](https://travis-ci.com/) provides a service for us to do this that is free for open source projects.
+
+To get started, we have to sign up for a Travis CI account and link it to our Github account and project.
+
+Additionally, to get our Cypress test to run on Travis CI, we will need to [Sauce Connect](https://wiki.saucelabs.com/display/DOCS/Sauce+Connect+Proxy) from [Sauce Labs](https://saucelabs.com/) (also free for open source projects).
+
+Once we have our accounts in place, we can add a file with instructions for Travis CI to our project directory.
+
+`.travis.yml`
+
+~~~~
+language: node_js
+node_js:
+    - 10
+addons:
+  sauce_connect:
+    username: "Your Sauce Labs username"
+  apt:
+    packages:
+      # Ubuntu 16+ does not install this dependency by default, so we need to install it ourselves
+      - libgconf-2-4
+## Cache NPM folder and Cypress binary
+## to avoid downloading Cypress again and again
+cache:
+  directories:
+    - ~/.npm
+    - ~/.cache
+before_script:
+- npm install
+- npm i -g now
+script:
+- now dev &
+- sleep 20s
+- npm run cy:run
+env:
+  global:
+    secure: "The secure string output by `travis encrypt SAUCE_ACCESS_KEY=Your Sauce Labs access key`"
+
+~~~~ 
+
+For more information about our setup, check out these articles:
+
+- [Using Sauce Labs with Travis CI](https://docs.travis-ci.com/user/sauce-connect/)
+- [Testing in a Real Browser with Sauce Labs + Travis CI](https://saucelabs.com/blog/repost-testing-in-a-real-browser-with-sauce-labs-travis-ci)
 
 ----
-
-Cross-browser Testing Platform Provided by [Sauce Labs](https://saucelabs.com/)
