@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import Head from 'next/head'
 import App from '../components/App'
 import { getHealthCheckQuery } from '../api/operations'
 import { Query } from 'react-apollo'

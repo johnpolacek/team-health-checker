@@ -1,4 +1,5 @@
 import React from 'react'
+import Head from 'next/head'
 import App from '../components/App'
 import HealthCheckResults from '../components/HealthCheckResults'
 import { Query } from 'react-apollo'

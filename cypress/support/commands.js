@@ -64,5 +64,5 @@ Cypress.Commands.add('fillOutHealthCheck', test => {
   cy.get('div').contains('Teamwork').parent().find('div').contains('OK').should('be.visible')
   cy.get('button').contains('Confirm').click()
 
-  cy.wait(2000)
+  cy.wait(4000)
 })

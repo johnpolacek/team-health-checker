@@ -1,3 +1,4 @@
 node_modules
 .next
 api/.graphcoolrc
+cypress/screenshots
