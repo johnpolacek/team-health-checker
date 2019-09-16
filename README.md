@@ -2,7 +2,8 @@
 ###### React, Apollo, Next.js, Now, Theme UI and Cypress
 
 ----
-<br/>
+[![Build Status](https://travis-ci.org/johnpolacek/team-health-checker.svg?branch=master)](https://travis-ci.org/johnpolacek/team-health-checker)
+
 
 ## Part 1
 
@@ -1479,5 +1480,6 @@ describe('Health Check', function() {
 We should see our test appear in the Cypress Test Runner app window. Make sure our local dev server is running via `now dev`, then click the test and the runner will open a new browser window. 
 
 
+----
 
-
+Cross-browser Testing Platform Provided by [Sauce Labs](https://saucelabs.com/)
