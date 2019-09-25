@@ -3,7 +3,7 @@ import { jsx } from 'theme-ui'
 
 export default (props) => (
   <div sx={{
-    minHeight: '100vh',
+    minHeight: '90vh',
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'center',
