@@ -8,6 +8,7 @@ export default () => (
   <App>
     <Head>
       <title>Team Health Checker</title>
+      <meta name="description" content="Health checks help you find out how your team is doing, and work together to improve" />
     </Head>
     <PageContainer>
       <Heading>Team Health Checker</Heading>
